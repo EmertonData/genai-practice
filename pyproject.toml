@@ -1,0 +1,17 @@
+[project]
+name = "genai-practice"
+version = "0.1.0"
+description = "GenAI for Finance workshop materials"
+requires-python = ">=3.10"
+dependencies = [
+    "anthropic",
+    "sentence-transformers",
+    "rank_bm25",
+    "numpy",
+    "glide-py",
+    "pypdf",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
