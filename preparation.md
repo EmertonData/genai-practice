@@ -10,8 +10,8 @@ The plan is ordered so the morning practice (Session 2 — Build, §4–§5) is 
 
 ## 1. Repository
 
-- [ ] **1.1 Create a public GitHub repo** (e.g. `xhec-genai-finance-workshop`). Public so students can `git clone` / fork without an invite step.
-- [ ] **1.2 Repo skeleton**:
+- [x] **1.1 Create a public GitHub repo** (e.g. `xhec-genai-finance-workshop`). Public so students can `git clone` / fork without an invite step.
+- [x] **1.2 Repo skeleton**:
   ```
   build/                          # instructor-only scripts that generate everything in data/
     generate_paragraph_claims.py  # taxonomy-driven claim generation (see §6.1)
@@ -28,12 +28,13 @@ The plan is ordered so the morning practice (Session 2 — Build, §4–§5) is 
     paragraph_claims.json         # (paragraph, claim, true_faithfulness_label, error_type) pairs — output of build/generate_paragraph_claims.py
     judge_scores.json             # precomputed judge faithfulness score per pair — output of build/run_judge_scores.py
   pyproject.toml
+  uv.lock
   .env.example
   README.md
   ```
   `build/` is instructor-only tooling (not shown to students as an exercise) — it's what turns the manual dataset-prep steps below into reproducible, rerunnable scripts, so a late change to the source PDF or the taxonomy doesn't mean redoing everything by hand.
-- [ ] **1.3 `.env.example`** documenting the one variable every notebook needs: `ANTHROPIC_API_KEY` (the single shared key, distributed per §3). Keep this the *only* thing students configure.
-- [ ] **1.4 README** with setup instructions written for someone opening the repo cold on an unfamiliar JupyterLab-like platform: clone, `pip install .` (from `pyproject.toml`), copy `.env.example` to `.env`, run the first cell.
+- [x] **1.3 `.env.example`** documenting the one variable every notebook needs: `ANTHROPIC_API_KEY` (the single shared key, distributed per §3). Keep this the *only* thing students configure.
+- [x] **1.4 README** with setup instructions written for someone opening the repo cold on an unfamiliar JupyterLab-like platform: clone, `uv sync` (from `pyproject.toml` / `uv.lock`), copy `.env.example` to `.env`, `uv run jupyter lab`, run the first cell.
 - [ ] **1.5 Decide correction-release policy**: corrections live in the repo from day one (simplest, "cheating" is allowed by design per your own brief) vs. released progressively during the day. Recommend: ship everything from the start — matches your stated intent and removes a moving part on the day.
 - [ ] **1.6 License / attribution note** for the financial document excerpt (public investor disclosure — fine to redistribute for teaching; still worth a one-line attribution in the README).
 
@@ -60,7 +61,7 @@ First run of the course, very little prep time: one Anthropic API key, shared by
 
 ## 4. Dataset for Session 2 (Build)
 
-- [ ] **4.1 Pick one big tech company** (e.g. NVIDIA) and source its 10-K annual report or investor "key figures" brochure.
+- [x] **4.1 Pick one big tech company** (e.g. NVIDIA) and source its 10-K annual report or investor "key figures" brochure.
 - [ ] **4.2 Select ~10 pages** spanning a **risk factors** section (prose, good for semantic search) and a **financial highlights table** (numeric, good for exact-match/regex retrieval) — the mix still makes hybrid search a real design choice in the build session, even though retrieval isn't separately graded in the afternoon.
 - [ ] **4.3 Extract and clean** those pages into a standalone workshop PDF (trim, fix obvious OCR/formatting artifacts, keep the table structure legible).
 - [ ] **4.4 Sanity-check chunking** against the extracted PDF using your own reference `chunk_text` implementation — confirm chunks are coherent and the financial table doesn't get mangled.
@@ -125,8 +126,8 @@ Starts only once §5 is fully done, corrections included — §6.4's optional sp
 
 ## 8. Environment & dependencies
 
-- [ ] **8.1 Pin dependencies in `pyproject.toml`**: `anthropic`, `sentence-transformers`, `rank_bm25`, `numpy`, `glide-py`, `pypdf` (or similar for PDF parsing), plus LangGraph if used for the ReAct loop. The `build/` scripts (§6.1, §7.2) share the same dependency set — no separate install path needed since they only run on your machine, not the students'.
-- [ ] **8.2 Test a clean install** on an environment matching the target platform as closely as possible (Python version, OS) once the platform is known.
+- [x] **8.1 Pin dependencies via `uv lock`**: `anthropic`, `sentence-transformers`, `rank_bm25`, `numpy`, `glide-py`, `pypdf`, `jupyterlab` (or similar for PDF parsing/notebook runtime), plus LangGraph if used for the ReAct loop. `uv.lock` is committed so every student gets the exact same resolved versions. Note `glide-py` requires Python ≥3.12, so `requires-python` in `pyproject.toml` is pinned to `>=3.12`. The `build/` scripts (§6.1, §7.2) share the same dependency set — no separate install path needed since they only run on your machine, not the students'.
+- [ ] **8.2 Test a clean install** (`uv sync` from a fresh clone) on an environment matching the target platform as closely as possible (Python version — must be ≥3.12 for `glide-py` — and OS) once the platform is known.
 - [ ] **8.3 Pre-cache the embedding model weights** (bake into a platform image if possible, or have students download once before the session) to avoid 70 simultaneous Hugging Face downloads at exercise start.
 - [ ] **8.4 Confirm CPU-only is sufficient** — no GPU request needed for either the embedding model or the API-based generation/judging.
 
