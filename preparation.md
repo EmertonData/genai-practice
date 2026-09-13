@@ -1,4 +1,4 @@
-# GenAI for Finance — Exercise Preparation TODO
+# GenAI in Practice — Exercise Preparation TODO
 
 Everything needed to get the two practice sessions running for 70 students. Slide preparation is out of scope (tracked separately). Organized as mini-tickets, roughly in dependency order.
 
@@ -34,7 +34,7 @@ The plan is ordered so the morning practice (Session 2 — Build, §4–§5) is 
   ```
   `instructor/` is instructor-only tooling (not shown to students as an exercise) — it's what turns the manual dataset-prep steps below into reproducible, rerunnable scripts, so a late change to the source PDF or the taxonomy doesn't mean redoing everything by hand.
 - [x] **1.3 `.env.example`** documenting the one variable every notebook needs: `ANTHROPIC_API_KEY` (the single shared key, distributed per §3). Keep this the *only* thing students configure.
-- [x] **1.4 README** with setup instructions written for someone opening the repo cold on an unfamiliar JupyterLab-like platform: clone, `uv sync` (from `pyproject.toml` / `uv.lock`), copy `.env.example` to `.env`, `uv run jupyter lab`, run the first cell.
+- [x] **1.4 README** with setup instructions written for someone opening the repo cold on their own laptop: clone, `uv sync` (from `pyproject.toml` / `uv.lock`), copy `.env.example` to `.env`, open the notebooks in an editor/IDE of choice, run the first cell.
 - [ ] **1.5 Decide correction-release policy**: corrections live in the repo from day one (simplest, "cheating" is allowed by design per your own brief) vs. released progressively during the day. Recommend: ship everything from the start — matches your stated intent and removes a moving part on the day.
 - [ ] **1.6 License / attribution note** for the financial document excerpt (public investor disclosure — fine to redistribute for teaching; still worth a one-line attribution in the README).
 
@@ -153,6 +153,6 @@ Starts only once §5 is fully done, corrections included — §6.4's optional sp
 
 - [ ] **11.1 Design a Google Form with 20 four-choice multiple-choice questions**, closing the day, covering both presentation sessions: LLM/RAG/agent fundamentals (Session 1) and faithfulness/LLM-as-judge/PPI/GLIDE fundamentals (Session 3). Timed for ~15 minutes.
 - [ ] **11.2 Set up Google Forms auto-grading** (answer key + point values per question) so each student's score is available immediately after submission.
-- [ ] **11.3 Confirm the pass threshold**: 80% (16/20 correct) required to obtain the GenAI for Finance certification from Emerton Data.
+- [ ] **11.3 Confirm the pass threshold**: 80% (16/20 correct) required to obtain the GenAI in Practice certification from Emerton Data.
 - [ ] **11.4 Dry-run the quiz** against the finalized slide content once Sessions 1 and 3 are locked, to confirm every question is answerable from what was actually taught and timing holds at ~15 minutes.
 - [ ] **11.5 Decide how results and certificates are communicated** to students after the fact (e.g. Google Forms' built-in score release vs. a follow-up email from Emerton Data).
