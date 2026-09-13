@@ -4,7 +4,6 @@ __pycache__/
 *$py.class
 
 # Distribution / packaging
-# Note: this repo has its own top-level build/ directory (instructor scripts) — not ignored.
 dist/
 *.egg-info/
 .eggs/
@@ -36,9 +35,6 @@ Thumbs.db
 # Editors
 .vscode/
 .idea/
-
-# Keep AI-assistant tooling local-only — not pushed to the public repo
-CLAUDE.md
 
 # Raw/working source documents — not pushed to the public repo
 data/
