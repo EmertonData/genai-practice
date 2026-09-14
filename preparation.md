@@ -1,4 +1,4 @@
-# GenAI for Finance — Exercise Preparation TODO
+# GenAI in Practice — Exercise Preparation TODO
 
 Everything needed to get the two practice sessions running for 70 students. Slide preparation is out of scope (tracked separately). Organized as mini-tickets, roughly in dependency order.
 
@@ -10,10 +10,10 @@ The plan is ordered so the morning practice (Session 2 — Build, §4–§5) is 
 
 ## 1. Repository
 
-- [ ] **1.1 Create a public GitHub repo** (e.g. `xhec-genai-finance-workshop`). Public so students can `git clone` / fork without an invite step.
-- [ ] **1.2 Repo skeleton**:
+- [x] **1.1 Create a public GitHub repo** (e.g. `xhec-genai-finance-workshop`). Public so students can `git clone` / fork without an invite step.
+- [x] **1.2 Repo skeleton**:
   ```
-  build/                          # instructor-only scripts that generate everything in data/
+  instructor/                          # instructor-only scripts that generate everything in data/
     generate_paragraph_claims.py  # taxonomy-driven claim generation (see §6.1)
     run_judge_scores.py           # precompute judge faithfulness scores (see §7.2)
   notebooks/
@@ -25,15 +25,16 @@ The plan is ordered so the morning practice (Session 2 — Build, §4–§5) is 
   data/
     company_excerpt.pdf
     questions.json                # 15-20 due-diligence questions, used in the build session
-    paragraph_claims.json         # (paragraph, claim, true_faithfulness_label, error_type) pairs — output of build/generate_paragraph_claims.py
-    judge_scores.json             # precomputed judge faithfulness score per pair — output of build/run_judge_scores.py
+    paragraph_claims.json         # (paragraph, claim, true_faithfulness_label, error_type) pairs — output of instructor/generate_paragraph_claims.py
+    judge_scores.json             # precomputed judge faithfulness score per pair — output of instructor/run_judge_scores.py
   pyproject.toml
+  uv.lock
   .env.example
   README.md
   ```
-  `build/` is instructor-only tooling (not shown to students as an exercise) — it's what turns the manual dataset-prep steps below into reproducible, rerunnable scripts, so a late change to the source PDF or the taxonomy doesn't mean redoing everything by hand.
-- [ ] **1.3 `.env.example`** documenting the one variable every notebook needs: `ANTHROPIC_API_KEY` (the single shared key, distributed per §3). Keep this the *only* thing students configure.
-- [ ] **1.4 README** with setup instructions written for someone opening the repo cold on an unfamiliar JupyterLab-like platform: clone, `pip install .` (from `pyproject.toml`), copy `.env.example` to `.env`, run the first cell.
+  `instructor/` is instructor-only tooling (not shown to students as an exercise) — it's what turns the manual dataset-prep steps below into reproducible, rerunnable scripts, so a late change to the source PDF or the taxonomy doesn't mean redoing everything by hand.
+- [x] **1.3 `.env.example`** documenting the one variable every notebook needs: `ANTHROPIC_API_KEY` (the single shared key, distributed per §3). Keep this the *only* thing students configure.
+- [x] **1.4 README** with setup instructions written for someone opening the repo cold on their own laptop: clone, `uv sync` (from `pyproject.toml` / `uv.lock`), copy `.env.example` to `.env`, open the notebooks in an editor/IDE of choice, run the first cell.
 - [ ] **1.5 Decide correction-release policy**: corrections live in the repo from day one (simplest, "cheating" is allowed by design per your own brief) vs. released progressively during the day. Recommend: ship everything from the start — matches your stated intent and removes a moving part on the day.
 - [ ] **1.6 License / attribution note** for the financial document excerpt (public investor disclosure — fine to redistribute for teaching; still worth a one-line attribution in the README).
 
@@ -60,7 +61,7 @@ First run of the course, very little prep time: one Anthropic API key, shared by
 
 ## 4. Dataset for Session 2 (Build)
 
-- [ ] **4.1 Pick one big tech company** (e.g. NVIDIA) and source its 10-K annual report or investor "key figures" brochure.
+- [x] **4.1 Pick one big tech company** (e.g. NVIDIA) and source its 10-K annual report or investor "key figures" brochure.
 - [ ] **4.2 Select ~10 pages** spanning a **risk factors** section (prose, good for semantic search) and a **financial highlights table** (numeric, good for exact-match/regex retrieval) — the mix still makes hybrid search a real design choice in the build session, even though retrieval isn't separately graded in the afternoon.
 - [ ] **4.3 Extract and clean** those pages into a standalone workshop PDF (trim, fix obvious OCR/formatting artifacts, keep the table structure legible).
 - [ ] **4.4 Sanity-check chunking** against the extracted PDF using your own reference `chunk_text` implementation — confirm chunks are coherent and the financial table doesn't get mangled.
@@ -101,7 +102,7 @@ Starts only once §5 is fully done, corrections included — §6.4's optional sp
 | **Contresens** | A deduction is flatly reversed | "Quantmetry a vu sa rentabilité augmenter et passer de 10% à 12%" → "Quantmetry a vu sa rentabilité diminuer et passer de 10% à 12%" |
 | **Accentuation** | Information is embellished or overstated | "Quantmetry a fait de la R&D" → "Quantmetry a investi dans la R&D" |
 
-- [ ] **6.1 Implement `build/generate_paragraph_claims.py`: a paragraph-level faithfulness dataset with ground truth known by construction, using two fixed prompts to a strong LLM (Opus) per chunk.** For each of the document's ~40–80 chunks:
+- [ ] **6.1 Implement `instructor/generate_paragraph_claims.py`: a paragraph-level faithfulness dataset with ground truth known by construction, using two fixed prompts to a strong LLM (Opus) per chunk.** For each of the document's ~40–80 chunks:
   - **Faithful-claim prompt**: "Paraphrase this paragraph in one short sentence, preserving every fact exactly."
   - **Applicability check**: first ask the LLM which of the ten taxonomy categories above plausibly apply to *this specific paragraph* (e.g. "Acronyme" only applies to a paragraph that actually contains an acronym) — don't force all ten onto every chunk.
   - **Unfaithful-claim prompt**, run once per applicable category: "Rewrite this paragraph into one short false sentence using this specific distortion: {category + description from the taxonomy above}. Keep the sentence plausible and close in form to the original — do not introduce an obviously absurd error."
@@ -116,7 +117,7 @@ Starts only once §5 is fully done, corrections included — §6.4's optional sp
 ## 7. Session 4 notebook — Evaluate Faithfulness with GLIDE
 
 - [ ] **7.1 `score_faithfulness` exercise**: implement the LLM-as-judge call — given `(paragraph, claim)`, prompt the judge model and parse out a faithfulness score — + correction + test.
-- [ ] **7.2 Implement `build/run_judge_scores.py`: precompute judge scores centrally.** Run `score_faithfulness` over every pair in `paragraph_claims.json` (§6.1 — now several hundred, since each paragraph yields one distortion per applicable category) yourself, once, using the shared key, and ship the results as `judge_scores.json`. Precomputing centrally — rather than having 70 students each call the judge on the same fixed data — protects the shared spend limit (§2.2) and guarantees everyone works from identical proxy labels; a few hundred one-time Opus calls is still cheap in absolute terms, since it's a single batch run, not 70 repetitions of it. Leave one or two cells where students make a *live* judge call themselves (on one pair of their choosing) purely so they've seen it happen, but the estimation exercise itself runs on the shipped data.
+- [ ] **7.2 Implement `instructor/run_judge_scores.py`: precompute judge scores centrally.** Run `score_faithfulness` over every pair in `paragraph_claims.json` (§6.1 — now several hundred, since each paragraph yields one distortion per applicable category) yourself, once, using the shared key, and ship the results as `judge_scores.json`. Precomputing centrally — rather than having 70 students each call the judge on the same fixed data — protects the shared spend limit (§2.2) and guarantees everyone works from identical proxy labels; a few hundred one-time Opus calls is still cheap in absolute terms, since it's a single batch run, not 70 repetitions of it. Leave one or two cells where students make a *live* judge call themselves (on one pair of their choosing) purely so they've seen it happen, but the estimation exercise itself runs on the shipped data.
 - [ ] **7.3 GLIDE exercise**: use a `glide.samplers` sampler (§6.3) on `paragraph_claims.json` to draw the labeled subset (its true labels are the labeled set), then feed those true labels alongside the full judge-score set (§7.2, the proxy-labeled set) into a GLIDE prediction-powered mean estimator, producing a debiased faithfulness-rate estimate with a confidence interval. This is the exercise students fill in — a short, well-scoped call into GLIDE's public sampler and estimator APIs, not a from-scratch implementation.
 - [ ] **7.4 Interpretation exercise**: have students compute the naive estimate (just the mean of all judge scores, no debiasing) side by side with the GLIDE estimate, and explain the gap — with N≈150 and n≈25 this should now show a real, visible difference in both point estimate and interval width, unlike the whole-Q&A version. This is the intended "aha" moment of the day; if a dry run shows the gap is still too small to see, that's the signal to go back to §6.2 and make the unfaithful claims subtler (more judge error to correct), not to add more labeled examples.
 - [ ] **7.5 Verify the GLIDE exercise against the actual installed `glide-py` API** — spot-check estimator names/signatures used in the notebook against the current package before finalizing, since the exercise text should mirror real usage.
@@ -125,8 +126,8 @@ Starts only once §5 is fully done, corrections included — §6.4's optional sp
 
 ## 8. Environment & dependencies
 
-- [ ] **8.1 Pin dependencies in `pyproject.toml`**: `anthropic`, `sentence-transformers`, `rank_bm25`, `numpy`, `glide-py`, `pypdf` (or similar for PDF parsing), plus LangGraph if used for the ReAct loop. The `build/` scripts (§6.1, §7.2) share the same dependency set — no separate install path needed since they only run on your machine, not the students'.
-- [ ] **8.2 Test a clean install** on an environment matching the target platform as closely as possible (Python version, OS) once the platform is known.
+- [x] **8.1 Pin dependencies via `uv lock`**: `anthropic`, `sentence-transformers`, `rank_bm25`, `numpy`, `glide-py`, `pypdf`, `jupyterlab` (or similar for PDF parsing/notebook runtime), plus LangGraph if used for the ReAct loop. `uv.lock` is committed so every student gets the exact same resolved versions. Note `glide-py` requires Python ≥3.12, so `requires-python` in `pyproject.toml` is pinned to `>=3.12`. The `instructor/` scripts (§6.1, §7.2) share the same dependency set — no separate install path needed since they only run on your machine, not the students'.
+- [ ] **8.2 Test a clean install** (`uv sync` from a fresh clone) on an environment matching the target platform as closely as possible (Python version — must be ≥3.12 for `glide-py` — and OS) once the platform is known.
 - [ ] **8.3 Pre-cache the embedding model weights** (bake into a platform image if possible, or have students download once before the session) to avoid 70 simultaneous Hugging Face downloads at exercise start.
 - [ ] **8.4 Confirm CPU-only is sufficient** — no GPU request needed for either the embedding model or the API-based generation/judging.
 
@@ -152,6 +153,6 @@ Starts only once §5 is fully done, corrections included — §6.4's optional sp
 
 - [ ] **11.1 Design a Google Form with 20 four-choice multiple-choice questions**, closing the day, covering both presentation sessions: LLM/RAG/agent fundamentals (Session 1) and faithfulness/LLM-as-judge/PPI/GLIDE fundamentals (Session 3). Timed for ~15 minutes.
 - [ ] **11.2 Set up Google Forms auto-grading** (answer key + point values per question) so each student's score is available immediately after submission.
-- [ ] **11.3 Confirm the pass threshold**: 80% (16/20 correct) required to obtain the GenAI for Finance certification from Emerton Data.
+- [ ] **11.3 Confirm the pass threshold**: 80% (16/20 correct) required to obtain the GenAI in Practice certification from Emerton Data.
 - [ ] **11.4 Dry-run the quiz** against the finalized slide content once Sessions 1 and 3 are locked, to confirm every question is answerable from what was actually taught and timing holds at ~15 minutes.
 - [ ] **11.5 Decide how results and certificates are communicated** to students after the fact (e.g. Google Forms' built-in score release vs. a follow-up email from Emerton Data).
