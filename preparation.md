@@ -13,7 +13,8 @@ The plan is ordered so the morning practice (Session 2 — Build, §4–§5) is 
 - [x] **1.1 Create a public GitHub repo** (e.g. `xhec-genai-finance-workshop`). Public so students can `git clone` / fork without an invite step.
 - [x] **1.2 Repo skeleton**:
   ```
-  instructor/                          # instructor-only scripts that generate everything in data/
+  instructor/                     # instructor-only scripts that generate everything in data/
+    preprocess_documents.py       # trim raw filings to their substantive pages (see §4.3)
     generate_paragraph_claims.py  # taxonomy-driven claim generation (see §6.1)
     run_judge_scores.py           # precompute judge faithfulness scores (see §7.2)
   notebooks/
@@ -22,11 +23,14 @@ The plan is ordered so the morning practice (Session 2 — Build, §4–§5) is 
   corrections/
     correction_build.py
     correction_eval.py
-  data/
-    company_excerpt.pdf
-    questions.json                # 15-20 due-diligence questions, used in the build session
-    paragraph_claims.json         # (paragraph, claim, true_faithfulness_label, error_type) pairs — output of instructor/generate_paragraph_claims.py
-    judge_scores.json             # precomputed judge faithfulness score per pair — output of instructor/run_judge_scores.py
+  data/                           # data-engineering stage convention, one folder per stage
+    01_raw/                       # full, untouched filings + earnings calls (2025, 2026)
+    02_processed/                 # same documents trimmed to their substantive pages — output of instructor/preprocess_documents.py
+    03_vectors/                   # embeddings generated during the workshop — gitignored
+    04_questions/
+      questions.json              # 15-20 due-diligence questions, used in the build session
+      paragraph_claims.json       # (paragraph, claim, true_faithfulness_label, error_type) pairs — output of instructor/generate_paragraph_claims.py
+      judge_scores.json           # precomputed judge faithfulness score per pair — output of instructor/run_judge_scores.py
   pyproject.toml
   uv.lock
   .env.example
@@ -62,9 +66,9 @@ First run of the course, very little prep time: one Anthropic API key, shared by
 ## 4. Dataset for Session 2 (Build)
 
 - [x] **4.1 Pick one big tech company** (e.g. NVIDIA) and source its 10-K annual report or investor "key figures" brochure.
-- [ ] **4.2 Select ~10 pages** spanning a **risk factors** section (prose, good for semantic search) and a **financial highlights table** (numeric, good for exact-match/regex retrieval) — the mix still makes hybrid search a real design choice in the build session, even though retrieval isn't separately graded in the afternoon.
-- [ ] **4.3 Extract and clean** those pages into a standalone workshop PDF (trim, fix obvious OCR/formatting artifacts, keep the table structure legible).
-- [ ] **4.4 Sanity-check chunking** against the extracted PDF using your own reference `chunk_text` implementation — confirm chunks are coherent and the financial table doesn't get mangled.
+- [x] **4.2 Keep a lot of content, not a curated handful of pages.** Earlier plan was ~10 pages; that was wrong — 10 pages is ~15k tokens, which fits in a single prompt, so students could skip retrieval entirely and the exercise becomes theatre. Retrieval only *matters* when the corpus can't fit in context. So the rule is: drop the boilerplate, keep everything an analyst would actually read (Business, the full Risk Factors, MD&A, financial statements, the Notes), and let the RAG engine be responsible for selecting the relevant paragraphs. Both filings still contain the prose/table mix that makes hybrid search a real design choice — Risk Factors is 20 pages of pure prose (0-2% digits), the consolidated statements are dense numerics (17-26% digits).
+- [x] **4.3 Trim the filings with `instructor/preprocess_documents.py`** (reads `data/01_raw/`, writes `data/02_processed/`). Dropped: cover + table of contents at the front; exhibit index, signatures, insider-trading policy, equity-plan boilerplate and certifications at the back. Kept: pp. 4-82 of the 2025 10-K and pp. 4-81 of the 2026 10-K, plus both earnings-call transcripts unchanged. Result: ~157 pages, ~737k chars (~184k tokens). Verified `pypdf` extracts the financial tables cleanly — row labels and figures survive intact, which is what makes exact-match/BM25 retrieval work on the numbers.
+- [ ] **4.4 Sanity-check chunking *and* time the vectorization** against `data/02_processed/` using your own reference `chunk_text` implementation — confirm chunks are coherent and the financial tables don't get mangled, then measure how long embedding the whole corpus takes. **Target: a few seconds on CPU.** This is the constraint that caps how much content we keep: if embedding the corpus is slow enough to be felt in the room (70 students each running it, possibly several times), cut content back or increase chunk size until it isn't.
 - [ ] **4.5 Write 15–20 due-diligence questions**, spanning factual/numeric lookup, risk synthesis, and at least one comparison question. Used to test the agent in the build session; not the basis for the faithfulness dataset in §6 (see the note in §6.1 on why).
 
 ---
@@ -102,7 +106,7 @@ Starts only once §5 is fully done, corrections included — §6.4's optional sp
 | **Contresens** | A deduction is flatly reversed | "Quantmetry a vu sa rentabilité augmenter et passer de 10% à 12%" → "Quantmetry a vu sa rentabilité diminuer et passer de 10% à 12%" |
 | **Accentuation** | Information is embellished or overstated | "Quantmetry a fait de la R&D" → "Quantmetry a investi dans la R&D" |
 
-- [ ] **6.1 Implement `instructor/generate_paragraph_claims.py`: a paragraph-level faithfulness dataset with ground truth known by construction, using two fixed prompts to a strong LLM (Opus) per chunk.** For each of the document's ~40–80 chunks:
+- [ ] **6.1 Implement `instructor/generate_paragraph_claims.py`: a paragraph-level faithfulness dataset with ground truth known by construction, using two fixed prompts to a strong LLM (Opus) per chunk.** The corpus (§4.3) is far larger than this dataset needs, so sample a subset of chunks rather than processing all of them — that keeps the one-time Opus batch to the size and cost originally planned. For each sampled chunk:
   - **Faithful-claim prompt**: "Paraphrase this paragraph in one short sentence, preserving every fact exactly."
   - **Applicability check**: first ask the LLM which of the ten taxonomy categories above plausibly apply to *this specific paragraph* (e.g. "Acronyme" only applies to a paragraph that actually contains an acronym) — don't force all ten onto every chunk.
   - **Unfaithful-claim prompt**, run once per applicable category: "Rewrite this paragraph into one short false sentence using this specific distortion: {category + description from the taxonomy above}. Keep the sentence plausible and close in form to the original — do not introduce an obviously absurd error."
