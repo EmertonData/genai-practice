@@ -1,0 +1,145 @@
+{
+  "description": "Due-diligence questions used to smoke-test the agent built in Session 2 (preparation.md §4.5). Not an evaluation dataset — Session 4 measures faithfulness on paragraph_claims.json instead. 'answerable' records whether the corpus in data/02_processed/ actually contains the answer; questions marked false are deliberate, to reveal whether the agent admits ignorance or invents an answer. Page numbers refer to the trimmed PDFs in data/02_processed/, not the originals in 01_raw/.",
+  "questions": [
+    {
+      "id": 1,
+      "question": "What was NVIDIA's total revenue in fiscal year 2026?",
+      "category": "financial",
+      "answerable": true,
+      "source": "10-K 2026, p. 48, Consolidated Statements of Income — $215,938 million"
+    },
+    {
+      "id": 2,
+      "question": "How did NVIDIA's revenue change between fiscal year 2025 and fiscal year 2026?",
+      "category": "comparison",
+      "answerable": true,
+      "source": "10-K 2026, p. 48, Consolidated Statements of Income — $130,497M to $215,938M, about +65%. Also derivable by comparing the two filings."
+    },
+    {
+      "id": 3,
+      "question": "How much did NVIDIA spend on research and development in fiscal year 2026?",
+      "category": "financial",
+      "answerable": true,
+      "source": "10-K 2026, p. 48, Consolidated Statements of Income — $18,497 million"
+    },
+    {
+      "id": 4,
+      "question": "What was NVIDIA's GAAP gross margin in the fourth quarter of fiscal year 2026?",
+      "category": "financial",
+      "answerable": true,
+      "source": "Earnings call 2026, CFO remarks (Colette Kress) — 75.0% GAAP, 75.2% non-GAAP"
+    },
+    {
+      "id": 5,
+      "question": "How many employees did NVIDIA have at the end of fiscal year 2026, and how were they split between functions?",
+      "category": "financial",
+      "answerable": true,
+      "source": "10-K 2026, p. 8, Item 1 Human Capital Management — ~42,000 employees in 38 countries; 31,000 in R&D, 11,000 in sales, marketing, operations and administration"
+    },
+    {
+      "id": 6,
+      "question": "What revenue is NVIDIA guiding to for the first quarter of fiscal year 2027?",
+      "category": "breaking_news",
+      "answerable": true,
+      "source": "Earnings call 2026, outlook section — $78 billion, plus or minus 2%"
+    },
+    {
+      "id": 7,
+      "question": "How much did NVIDIA invest in Anthropic, and what does the partnership involve?",
+      "category": "breaking_news",
+      "answerable": true,
+      "source": "Earnings call 2026, Jensen Huang remarks — $10 billion investment; Anthropic to train and inference on Grace Blackwell and Vera Rubin systems"
+    },
+    {
+      "id": 8,
+      "question": "What is the Rubin platform, and which chips make it up?",
+      "category": "breaking_news",
+      "answerable": true,
+      "source": "Earnings call 2026, CFO remarks — six chips: Vera CPU, Rubin GPU, NVLink 6 switch, ConnectX-9 SuperNIC, BlueField-4 DPU, Spectrum-6 Ethernet switch"
+    },
+    {
+      "id": 9,
+      "question": "What agreement did NVIDIA reach with Groq, and what precedent does the company compare it to?",
+      "category": "breaking_news",
+      "answerable": true,
+      "source": "Earnings call 2026, Jensen Huang remarks — non-licensing agreement for low-latency inference technology plus an engineering team; explicitly compared to the Mellanox playbook"
+    },
+    {
+      "id": 10,
+      "question": "Is NVIDIA currently generating data center revenue in China, and what does its guidance assume?",
+      "category": "breaking_news",
+      "answerable": true,
+      "source": "Earnings call 2026, CFO remarks — small H200 volumes approved by the U.S. government but no revenue generated yet; no China data center compute revenue assumed in the outlook"
+    },
+    {
+      "id": 11,
+      "question": "How large was NVIDIA's sovereign AI business in fiscal year 2026, and which countries drove it?",
+      "category": "strategy",
+      "answerable": true,
+      "source": "Earnings call 2026, CFO remarks — over $30 billion, more than tripled year over year; driven by Canada, France, the Netherlands, Singapore and the UK"
+    },
+    {
+      "id": 12,
+      "question": "How does NVIDIA describe its long-term opportunity in physical AI and robotics?",
+      "category": "strategy",
+      "answerable": true,
+      "source": "Earnings call 2026, CFO remarks — over $6 billion of FY2026 revenue; robotaxi fleets scaling to millions of vehicles, Cosmos and Isaac GR00T models. Automotive context in 10-K 2026, Item 1 (pp. 3-5)."
+    },
+    {
+      "id": 13,
+      "question": "Why did NVIDIA acquire Mellanox, and how big has the networking business become since?",
+      "category": "strategy",
+      "answerable": true,
+      "source": "10-K 2026, p. 1, Item 1 Business (2020 acquisition, enabled data-center-scale platforms) + earnings call 2026 (over $31 billion in FY2026, more than 10x fiscal 2021)"
+    },
+    {
+      "id": 14,
+      "question": "What does NVIDIA say about how data center power constraints shape customer purchasing decisions?",
+      "category": "strategy",
+      "answerable": true,
+      "source": "Earnings call 2026, CFO remarks — every data center is power constrained, so customers make architectural decisions on performance per watt to maximise AI factory revenue"
+    },
+    {
+      "id": 15,
+      "question": "What risks does NVIDIA identify in relation to U.S. export controls and China?",
+      "category": "risk",
+      "answerable": true,
+      "source": "10-K 2026, Item 1A Risk Factors, pp. 23-25 (export licensing, lost China revenue, Chinese competitors); background in Item 1 at pp. 7-8"
+    },
+    {
+      "id": 16,
+      "question": "How concentrated is NVIDIA's customer base, and why does the company flag it as a risk?",
+      "category": "risk",
+      "answerable": true,
+      "source": "10-K 2026, p. 38, Concentration of Revenue — one direct customer represented 22% of total revenue and another 14% in FY2026"
+    },
+    {
+      "id": 17,
+      "question": "How much was Jensen Huang paid in fiscal year 2026?",
+      "category": "unanswerable_plausible",
+      "answerable": false,
+      "source": "Not in the corpus. 10-K 2026, p. 44 shows Item 11 Executive Compensation is incorporated by reference to the Proxy Statement, which is not part of this dataset. Sounds like it belongs in a financial filing, so it is a realistic trap — the agent should say the figure is not available rather than invent one."
+    },
+    {
+      "id": 18,
+      "question": "Which company is the direct customer that represented 22% of NVIDIA's revenue in fiscal year 2026?",
+      "category": "unanswerable_plausible",
+      "answerable": false,
+      "source": "Not in the corpus. 10-K 2026, p. 38 discloses the percentage but deliberately never names the customer. The share is answerable, the identity is not — the agent should say so rather than guess a hyperscaler."
+    },
+    {
+      "id": 19,
+      "question": "What is NVIDIA's market share in AI accelerators compared with AMD and Intel?",
+      "category": "unanswerable_plausible",
+      "answerable": false,
+      "source": "Not in the corpus. The 10-K describes competition qualitatively in Item 1 and Item 1A but publishes no market-share figures, and no competitor filings are included."
+    },
+    {
+      "id": 20,
+      "question": "What is the strategic rationale behind Mistral AI's acquisition of NVIDIA?",
+      "category": "offbeat_false_premise",
+      "answerable": false,
+      "source": "Not in the corpus, and the premise is false — no such acquisition happened or could plausibly happen. Unlike the other unanswerable questions, this one tests whether the agent challenges a false premise or accepts it and confabulates a rationale, which is a distinct and common failure mode."
+    }
+  ]
+}
