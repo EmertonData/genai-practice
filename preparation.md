@@ -77,11 +77,11 @@ First run of the course, very little prep time: one Anthropic API key, shared by
 
 Finish this entire section, corrections included — `chunk_text` (§5.1), `vectorize_text` (§5.2), and the ReAct loop assembly (§5.6) all need a written, tested correction — before starting any work in §6. The morning practice must stand on its own; nothing in the afternoon material should be touched until it does.
 
-- [ ] **5.1 `chunk_text` exercise** + correction + inline unit test (assert on a small fixed example).
+- [x] **5.1 `chunk_text` exercise** + correction + inline unit test (assert on a small fixed example).
 - [ ] **5.2 `vectorize_text` exercise** using a small local CPU embedding model (e.g. `sentence-transformers/all-MiniLM-L6-v2` or `multilingual-e5-small`) + correction + test.
 - [ ] **5.3 `save_vectors` exercise**: store embeddings as a plain NumPy array in memory (no external vector DB) + correction + test.
 - [ ] **5.4 `top_k_search` exercise**: vectorized cosine-similarity top-k + correction + test.
-- [ ] **5.5 BM25 search exercise** (`rank_bm25`) and fusion with semantic search into one hybrid search tool + correction + test.
+- [ ] **5.5 BM25 search + hybrid fusion — likely dropped.** The RAG should stay as simple as possible, so this only survives if it turns out cheap to add. Decide once §5.4 is done.
 - [ ] **5.6 ReAct loop assembly exercise**: wire the search tool into a single simple ReAct agent (LangGraph or a manual loop — pick one, don't offer both) + correction + test.
 - [ ] **5.7 Full top-to-bottom dry run** of the notebook against the real API using the shared key, to validate both correctness and real token/cost consumption per run — this run is also what produces the agent used for the optional spot-check in §6.4.
 
