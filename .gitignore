@@ -36,5 +36,6 @@ Thumbs.db
 .vscode/
 .idea/
 
-# Raw/working source documents — not pushed to the public repo
-data/
+# Vectors are generated during the workshop — not shipped
+data/03_vectors/*
+!data/03_vectors/.gitkeep
