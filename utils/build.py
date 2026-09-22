@@ -8,6 +8,7 @@ import json
 import re
 from pathlib import Path
 
+import numpy as np
 from pypdf import PdfReader
 
 
@@ -81,3 +82,39 @@ def save_chunks(chunks: list[dict], output_path: str) -> None:
     None
     """
     Path(output_path).write_text(json.dumps(chunks, indent=2))
+
+
+def save_vectors(vectors: np.ndarray, chunk_ids: list[str], output_path: str) -> None:
+    """Write vectors and their chunk ids to one `.npz` file.
+
+    Parameters
+    ----------
+    vectors : np.ndarray
+        One row per chunk, of shape (len(chunk_ids), embedding dimension).
+    chunk_ids : list[str]
+        The chunk ids, in the same order as the rows of `vectors`.
+    output_path : str
+        Path to the `.npz` file to write.
+
+    Returns
+    -------
+    None
+    """
+    np.savez(output_path, vectors=vectors, chunk_ids=np.array(chunk_ids))
+
+
+def load_vectors(input_path: str) -> tuple[np.ndarray, list[str]]:
+    """Read back a file written by `save_vectors`.
+
+    Parameters
+    ----------
+    input_path : str
+        Path to the `.npz` file.
+
+    Returns
+    -------
+    tuple[np.ndarray, list[str]]
+        The vectors, and the chunk ids they encode in the same order.
+    """
+    loaded = np.load(input_path)
+    return loaded["vectors"], loaded["chunk_ids"].tolist()

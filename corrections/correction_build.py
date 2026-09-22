@@ -3,6 +3,8 @@
 chunk_string, vectorize_text, top_k_search and the ReAct loop assembly.
 """
 
+import numpy as np
+from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_text_splitters import CharacterTextSplitter
 
 
@@ -26,3 +28,21 @@ def chunk_string(text: str, chunk_size: int, overlap: int) -> list[str]:
     # separator="" means: do not look for a character to break on, just cut on length.
     splitter = CharacterTextSplitter(separator="", chunk_size=chunk_size, chunk_overlap=overlap)
     return [chunk for chunk in splitter.split_text(text) if chunk.strip()]
+
+
+def embed_texts(texts: list[str], model: HuggingFaceEmbeddings) -> np.ndarray:
+    """Turn each text into a vector.
+
+    Parameters
+    ----------
+    texts : list[str]
+        The texts to embed.
+    model : HuggingFaceEmbeddings
+        The embedding model, already loaded.
+
+    Returns
+    -------
+    np.ndarray
+        One row per text, of shape (len(texts), embedding dimension).
+    """
+    return np.array(model.embed_documents(texts))
