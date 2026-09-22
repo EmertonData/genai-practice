@@ -4,6 +4,7 @@ version = "0.1.0"
 description = "GenAI in Practice workshop materials"
 requires-python = ">=3.12"
 dependencies = [
+    "langchain-text-splitters>=1.1.2",
     "pypdf>=6.18.1",
 ]
 
