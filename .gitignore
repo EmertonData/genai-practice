@@ -36,6 +36,8 @@ Thumbs.db
 .vscode/
 .idea/
 
-# Vectors are generated during the workshop — not shipped
-data/03_vectors/*
-!data/03_vectors/.gitkeep
+# Chunks and vectors are generated during the workshop — not shipped
+data/03_chunks/*
+!data/03_chunks/.gitkeep
+data/04_vectors/*
+!data/04_vectors/.gitkeep
