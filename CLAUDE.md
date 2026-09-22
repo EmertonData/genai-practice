@@ -16,9 +16,10 @@ Dependencies are added as each exercise needs them (see the dependency policy be
 
 - **One cell = one job**, each preceded by a short markdown cell. Keep both short, avoid the "wall of text" risk once eight exercises each carry commentary.
 - **Exercise statements follow a fixed order**: motivation and stakes → objective → task ("complete the function, respecting its signature and docstring") → hint, placed after the code cell.
-- **One exercise = one function**, signature typed and numpy docstring given, body left to the student. Ship the simplest thing that works; improvements go in a 3-bullet synthesis at the very end of the finished notebook, not after each exercise.
-- **Plumbing is given, not exercised.** Anything that teaches Python rather than RAG (reading a PDF, building a dict, writing JSON) lives in `src/utils_build.py` and is imported. Note the constraint: a helper in that module cannot call a function the student writes in the notebook, and putting the student's function in the module would hand them the solution — so composition happens in the notebook.
-- **Checks are inline `assert`s** on a small, representative example, ending in a `print("OK — …")`.
+- **One exercise = one function**, signature typed and numpy docstring given, body left to the student, marked with `# YOUR CODE HERE` and nothing else (no `raise NotImplementedError`). Ship the simplest thing that works; improvements go in a 3-bullet synthesis at the very end of the finished notebook, not after each exercise.
+- **Plumbing is given, not exercised.** Anything that teaches Python rather than RAG (reading a PDF, building a dict, writing JSON) lives in `utils/build.py` and is imported. Note the constraint: a helper in that module cannot call a function the student writes in the notebook, and putting the student's function in the module would hand them the solution — so composition happens in the notebook.
+- **Checks are inline `assert`s** on a small, representative example, ending in a `print("OK: …")`. No assert message: `assert x == y, x` reads like a stray tuple.
+- **Write prose, not telegrams, and avoid the tells of AI-written text.** Grégoire's PR #8 review named three: em-dashes, the binary "X, not Y" rhythm, and bullet lists of bare fragments. A section should read like a book, so introduce a list with a full sentence ("The next step is to orchestrate chunking across a list of documents. It proceeds as follows:") and make each item a sentence. Prefer the established term over an approximation (an `index`, not "one list"). Never address the instructor in student-facing text.
 - Notebooks are committed with **outputs cleared**.
 
 ## Commands
@@ -33,7 +34,7 @@ Environment is managed with [uv](https://docs.astral.sh/uv/); Python **>=3.12 is
 **Dependency policy: add packages incrementally, not upfront.** Introduce each dependency via `uv add <package>` only when the script/exercise that actually needs it is being written (e.g. add `sentence-transformers` when writing §5.2 `vectorize_text`, `rank_bm25` when writing §5.5, `glide-py` when writing §6.3/§7.3). This was explicit review feedback from Grégoire on PR #3 — the goal is avoiding a bloated, slow-to-resolve venv full of packages nothing uses yet. Don't front-load the full anticipated dependency list again.
 
 Notes:
-- The project is a `[tool.uv] package = false` (non-package) project — there's no `genai_practice` importable module and no `[build-system]`, so don't reintroduce a build backend unless something in the repo actually becomes a distributable package.
+- **`utils/` is a real local Python package**, installed into the venv by `uv sync` via hatchling (`[build-system]` + `[tool.hatch.build.targets.wheel] packages = ["utils"]`). Notebooks therefore import it as `from utils.build import ...` from anywhere. Never go back to `sys.path.append("../src")`: Grégoire flagged that on PR #8 as the thing to avoid.
 - The PyPI package `glide-py` imports as `import glide` (not `import glide_py`); the sampler classes referenced in preparation.md §6.3 live at `glide.samplers` (`StratifiedSampler`, `UniformSampler`, etc.) — confirmed present when it was briefly installed to verify this, but it's not currently a dependency (see policy above) — add it back with `uv add glide-py` when actually implementing §6.3/§7.3.
 - `uv.lock` is committed (unlike `.venv/`, which is gitignored) so both maintainers and every student get identical resolved versions of whatever's actually been added — this is what satisfies preparation.md §8.1's "pin dependencies" ticket.
 
@@ -79,10 +80,11 @@ Session 4 depends on Session 2 being fully finished (exercises + corrections) fi
 instructor/                     # instructor-only scripts (not shown to students)
   generate_paragraph_claims.py  # taxonomy-driven claim generation
   run_judge_scores.py           # precompute judge faithfulness scores
-src/
-  utils_build.py                # helpers given to students: load_document, build_chunk_records, save_chunks
+utils/                          # local package, installed by uv sync
+  __init__.py
+  build.py                      # helpers given to students: load_document, build_chunk_records, save_chunks
 notebooks/
-  01_build_agentic_rag.ipynb    # imports src/ via sys.path.append("../src")
+  01_build_agentic_rag.ipynb    # imports the helpers with `from utils.build import ...`
   02_evaluate_faithfulness.ipynb
 corrections/
   correction_build.py
