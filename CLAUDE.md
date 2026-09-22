@@ -8,7 +8,18 @@ Claude Code sessions working in this repo should proactively update the auto-mem
 
 ## Current state of this repo
 
-The repo skeleton (below) now exists, but only as scaffolding: `instructor/*.py` and `corrections/*.py` are stub modules (`raise NotImplementedError` or just a docstring, no logic yet), and both notebooks contain only a title markdown cell — no exercise content or descriptions yet, since those haven't been written (don't add descriptions ahead of the actual exercise content; describe an exercise in its notebook when it's actually authored). The environment itself is real and installable via `uv` (see Commands below). Dependencies are added as each exercise needs them — see the dependency policy below. The ReAct loop uses **LangGraph**: issue #7 specifies `make_agentic_rag(...) -> StateGraph`, which settles the §5.6 question. When actual exercise/correction implementation starts (§5, §6, §7 in preparation.md), fill in the stubs and update this file with test commands (how to run a single test, etc.) once a test setup exists.
+Session 2's notebook has its first exercise (`chunk_string`, §5.1) plus the cells that chunk the corpus; the rest of §5 is unwritten, and `notebooks/02_evaluate_faithfulness.ipynb` is still just a title cell. `instructor/*.py` are still stubs. Don't add descriptions ahead of the actual exercise content — describe an exercise when it's authored.
+
+Dependencies are added as each exercise needs them (see the dependency policy below). The ReAct loop uses **LangGraph**: issue #7 specifies `make_agentic_rag(...) -> StateGraph`, which settles the §5.6 question. Once a test setup exists, add the commands here.
+
+### Notebook conventions 
+
+- **One cell = one job**, each preceded by a short markdown cell. Keep both short, avoid the "wall of text" risk once eight exercises each carry commentary.
+- **Exercise statements follow a fixed order**: motivation and stakes → objective → task ("complete the function, respecting its signature and docstring") → hint, placed after the code cell.
+- **One exercise = one function**, signature typed and numpy docstring given, body left to the student. Ship the simplest thing that works; improvements go in a 3-bullet synthesis at the very end of the finished notebook, not after each exercise.
+- **Plumbing is given, not exercised.** Anything that teaches Python rather than RAG (reading a PDF, building a dict, writing JSON) lives in `src/utils_build.py` and is imported. Note the constraint: a helper in that module cannot call a function the student writes in the notebook, and putting the student's function in the module would hand them the solution — so composition happens in the notebook.
+- **Checks are inline `assert`s** on a small, representative example, ending in a `print("OK — …")`.
+- Notebooks are committed with **outputs cleared**.
 
 ## Commands
 
@@ -65,20 +76,26 @@ Session 4 depends on Session 2 being fully finished (exercises + corrections) fi
 ## Target repo skeleton (from preparation.md §1.2)
 
 ```
-instructor/                     # instructor-only scripts that generate everything in data/ (not shown to students)
+instructor/                     # instructor-only scripts (not shown to students)
   generate_paragraph_claims.py  # taxonomy-driven claim generation
   run_judge_scores.py           # precompute judge faithfulness scores
+src/
+  utils_build.py                # helpers given to students: load_document, build_chunk_records, save_chunks
 notebooks/
-  01_build_agentic_rag.ipynb
+  01_build_agentic_rag.ipynb    # imports src/ via sys.path.append("../src")
   02_evaluate_faithfulness.ipynb
 corrections/
   correction_build.py
   correction_eval.py
-data/
-  company_excerpt.pdf
-  questions.json                # 15-20 due-diligence questions (build session)
-  paragraph_claims.json         # (paragraph, claim, true_faithfulness_label, error_type) — output of instructor/generate_paragraph_claims.py
-  judge_scores.json             # precomputed judge faithfulness score per pair — output of instructor/run_judge_scores.py
+data/                           # numbered pipeline stages
+  01_raw/                       # full filings + earnings calls, 2025 and 2026 (tracked)
+  02_processed/                 # trimmed to substantive pages (tracked)
+  03_chunks/                    # generated in the workshop (gitignored)
+  04_vectors/                   # generated in the workshop (gitignored)
+  05_questions/
+    questions.json              # 20 due-diligence questions (build session)
+    paragraph_claims.json       # output of instructor/generate_paragraph_claims.py
+    judge_scores.json           # output of instructor/run_judge_scores.py
 pyproject.toml
 uv.lock
 .env.example
@@ -87,7 +104,7 @@ README.md
 
 `instructor/` scripts are one-time, instructor-run batch jobs against the shared API key (see below) — they exist so dataset regeneration (e.g. a source PDF or taxonomy change) is reproducible instead of manual. They are never distributed to students. (Named `instructor/`, not `build/`, to avoid colliding with the conventional meaning of a `build/` directory in Python packaging.)
 
-**`data/` is currently gitignored wholesale** (raw/working source documents — full 10-Ks, earnings-call transcripts — shouldn't be pushed as-is). Grégoire has opened issue #1 asking for a `data/01_raw/`, `02_processed/`, `03_vectors/`, `04_questions/` structure instead, with `01_raw/` and `02_processed/` actually pushed to git (only generated-during-the-workshop data like `03_vectors/` staying gitignored) — this is a real change from the "gitignore all of data/" decision above and needs to be reconciled/implemented, along with resolving whether the 2024 source documents (in addition to the 2025/2026 his ticket mentions) should be kept.
+**`data/` stages 01 and 02 are tracked; 03 and 04 are gitignored** apart from their `.gitkeep`, since chunks and vectors are produced during the workshop. Only 2025 and 2026 documents are in scope — the 2024 files were moved out of the repo to `~/Documents/code/genai-practice-archive/`.
 
 ## Key architectural decisions to preserve
 
