@@ -30,3 +30,6 @@ default-groups = []
 line-length = 120
 fix = true
 lint.select = ["E", "F", "I"]
+
+# Exercise stubs assign a variable the student has yet to use, which reads as dead code.
+lint.per-file-ignores = { "notebooks/*.ipynb" = ["F841"] }
