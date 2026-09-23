@@ -20,7 +20,7 @@ Dependencies are added as each exercise needs them (see the dependency policy be
 - **Plumbing is given, not exercised.** Anything that teaches Python rather than RAG (reading a PDF, building a dict, writing JSON) lives in `utils/build.py` and is imported. Note the constraint: a helper in that module cannot call a function the student writes in the notebook, and putting the student's function in the module would hand them the solution — so composition happens in the notebook.
 - **Checks are inline `assert`s** on a small, representative example, ending in a `print("OK: …")`. No assert message: `assert x == y, x` reads like a stray tuple.
 - **Write prose, not telegrams, and avoid the tells of AI-written text.** Grégoire's PR #8 review named three: em-dashes, the binary "X, not Y" rhythm, and bullet lists of bare fragments. A section should read like a book, so introduce a list with a full sentence ("The next step is to orchestrate chunking across a list of documents. It proceeds as follows:") and make each item a sentence. Prefer the established term over an approximation (an `index`, not "one list"). Never address the instructor in student-facing text.
-- Notebooks are committed with **outputs cleared**.
+- Notebooks are committed with **outputs cleared** and with `source` stored as a list of lines. Both are enforced by the pre-commit hooks in `prek.toml` (`nbstripout` and `normalize-notebooks`), adopted from the GLIDE repo on Grégoire's suggestion. They exist because editing a cell programmatically rewrites `source` as one long string, which turns the GitHub diff into an unreadable blob. `nbstripout` also renumbers cell ids to sequential integers, so inserting a cell mid-notebook renumbers everything after it; appending at the end does not.
 
 ## Commands
 
@@ -30,6 +30,11 @@ Environment is managed with [uv](https://docs.astral.sh/uv/); Python **>=3.12 is
 - `uv run python <script>` — run a script (e.g. `instructor/generate_paragraph_claims.py`) inside the project environment.
 - `uv add <package>` / `uv remove <package>` — change dependencies (updates `pyproject.toml` and `uv.lock` together; don't hand-edit the dependency list and forget to re-lock).
 - `uv lock` — re-resolve and refresh `uv.lock` after a manual `pyproject.toml` edit.
+- `uv sync --group dev` — **what the two of us run.** Adds the tooling in the `dev` dependency group (`prek`, `ruff`, `nbformat`) on top of the student environment.
+- `uv run --group dev prek install` — **install the git pre-commit hooks, once per clone.** Without this the hooks never run and the problems they prevent come back.
+- `uv run --group dev prek run --all-files` — run every hook over the whole repo, rather than only on staged files.
+
+**Students run plain `uv sync` and get none of the tooling.** `[tool.uv] default-groups = []` overrides uv's habit of installing the `dev` group by default, which keeps the student install limited to what the notebooks actually import. Anything added for our own workflow belongs in the `dev` group, never in `[project] dependencies`.
 
 **Dependency policy: add packages incrementally, not upfront.** Introduce each dependency via `uv add <package>` only when the script/exercise that actually needs it is being written (e.g. add `sentence-transformers` when writing §5.2 `vectorize_text`, `rank_bm25` when writing §5.5, `glide-py` when writing §6.3/§7.3). This was explicit review feedback from Grégoire on PR #3 — the goal is avoiding a bloated, slow-to-resolve venv full of packages nothing uses yet. Don't front-load the full anticipated dependency list again.
 
