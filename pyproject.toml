@@ -32,5 +32,6 @@ fix = true
 lint.select = ["E", "F", "I"]
 
 # An exercise stub leaves the imports and variables it is given unused until the student
-# fills it in, which ruff reads as dead code and, with fix = true, deletes.
-lint.per-file-ignores = { "notebooks/*.ipynb" = ["F401", "F841"] }
+# fills it in, which ruff reads as dead code and, with fix = true, deletes. Formatting still
+# applies to the notebooks; only the lint rules are switched off.
+lint.exclude = ["notebooks/*.ipynb"]
