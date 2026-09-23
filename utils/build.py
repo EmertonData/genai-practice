@@ -32,7 +32,10 @@ def load_document(input_path: str) -> tuple[str, int]:
         The full text of the document, and the fiscal year read from its file name.
     """
     path = Path(input_path)
-    year = int(re.search(r"\d{4}", path.stem).group())
+    match = re.search(r"\d{4}", path.stem)
+    if match is None:
+        raise ValueError(f"no 4-digit year found in file name: {path.name}")
+    year = int(match.group())
 
     if path.suffix == ".pdf":
         pages = [page.extract_text() or "" for page in PdfReader(path).pages]
