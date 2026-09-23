@@ -6,6 +6,7 @@ chunk_string, vectorize_text, top_k_search and the ReAct loop assembly.
 import numpy as np
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_text_splitters import CharacterTextSplitter
+from numpy.typing import NDArray
 
 
 def chunk_string(text: str, chunk_size: int, overlap: int) -> list[str]:
@@ -30,7 +31,7 @@ def chunk_string(text: str, chunk_size: int, overlap: int) -> list[str]:
     return [chunk for chunk in splitter.split_text(text) if chunk.strip()]
 
 
-def embed_texts(texts: list[str], model: HuggingFaceEmbeddings) -> np.ndarray:
+def embed_texts(texts: list[str], model: HuggingFaceEmbeddings) -> NDArray[np.float32]:
     """Turn each text into a vector.
 
     Parameters
@@ -42,20 +43,20 @@ def embed_texts(texts: list[str], model: HuggingFaceEmbeddings) -> np.ndarray:
 
     Returns
     -------
-    np.ndarray
+    NDArray[np.float32]
         One row per text, of shape (len(texts), embedding dimension).
     """
-    return np.array(model.embed_documents(texts))
+    return np.asarray(model.embed_documents(texts), dtype=np.float32)
 
 
-def top_k_search(query_vector: np.ndarray, chunk_vectors: np.ndarray, k: int) -> list[int]:
+def top_k_search(query_vector: NDArray[np.float32], chunk_vectors: NDArray[np.float32], k: int) -> list[int]:
     """Find the k chunks whose vectors are closest to the query vector.
 
     Parameters
     ----------
-    query_vector : np.ndarray
+    query_vector : NDArray[np.float32]
         The vector of the question, of shape (embedding dimension,).
-    chunk_vectors : np.ndarray
+    chunk_vectors : NDArray[np.float32]
         One row per chunk, of shape (number of chunks, embedding dimension).
     k : int
         Number of chunks to return.
