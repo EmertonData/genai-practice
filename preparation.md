@@ -78,8 +78,8 @@ First run of the course, very little prep time: one Anthropic API key, shared by
 Finish this entire section, corrections included — `chunk_text` (§5.1), `vectorize_text` (§5.2), and the ReAct loop assembly (§5.6) all need a written, tested correction — before starting any work in §6. The morning practice must stand on its own; nothing in the afternoon material should be touched until it does.
 
 - [x] **5.1 `chunk_text` exercise** + correction + inline unit test (assert on a small fixed example).
-- [ ] **5.2 `vectorize_text` exercise** using a small local CPU embedding model (e.g. `sentence-transformers/all-MiniLM-L6-v2` or `multilingual-e5-small`) + correction + test.
-- [ ] **5.3 `save_vectors` exercise**: store embeddings as a plain NumPy array in memory (no external vector DB) + correction + test.
+- [x] **5.2 `vectorize_text` exercise** using a small local CPU embedding model (e.g. `sentence-transformers/all-MiniLM-L6-v2` or `multilingual-e5-small`) + correction + test. Shipped as `embed_texts` (PR #10).
+- [x] **5.3 `save_vectors`: given helper, not an exercise.** Storing a NumPy array with `np.savez` teaches Python rather than RAG, so it follows the "plumbing is given" convention and sits in `utils/build.py` next to `load_vectors`. To be confirmed by Grégoire on PR #10.
 - [ ] **5.4 `top_k_search` exercise**: vectorized cosine-similarity top-k + correction + test.
 - [ ] **5.5 BM25 search + hybrid fusion — likely dropped.** The RAG should stay as simple as possible, so this only survives if it turns out cheap to add. Decide once §5.4 is done.
 - [ ] **5.6 ReAct loop assembly exercise**: wire the search tool into a single simple ReAct agent (LangGraph or a manual loop — pick one, don't offer both) + correction + test.
