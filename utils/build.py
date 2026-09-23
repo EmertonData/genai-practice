@@ -6,9 +6,14 @@ so they come ready-made and the exercises stay on the RAG concepts.
 
 import json
 import re
+from collections.abc import Callable
 from pathlib import Path
+from typing import Annotated, TypedDict
 
 import numpy as np
+from langchain_core.language_models import BaseChatModel
+from langchain_core.messages import BaseMessage
+from langgraph.graph import add_messages
 from numpy.typing import NDArray
 from pypdf import PdfReader
 
@@ -119,3 +124,34 @@ def load_vectors(input_path: str) -> tuple[NDArray[np.float32], list[str]]:
     """
     loaded = np.load(input_path)
     return loaded["vectors"], loaded["chunk_ids"].tolist()
+
+
+class State(TypedDict, total=False):
+    """What travels through the agent: the conversation so far.
+
+    `add_messages` is a reducer. A node returns only the message it just produced and the
+    reducer appends it, so the conversation grows instead of being overwritten.
+    """
+
+    messages: Annotated[list[BaseMessage], add_messages]
+
+
+def make_answer_or_call_tool(llm_with_tools: BaseChatModel) -> Callable[[State], State]:
+    """Build the node that lets the model read the conversation and reply to it.
+
+    Parameters
+    ----------
+    llm_with_tools : BaseChatModel
+        The model, with the tools already bound to it.
+
+    Returns
+    -------
+    Callable[[State], State]
+        A node: it takes the conversation and returns the model's reply, which is either an
+        answer or a request to call one of the tools.
+    """
+
+    def answer_or_call_tool(state: State) -> State:
+        return {"messages": [llm_with_tools.invoke(state["messages"])]}
+
+    return answer_or_call_tool
