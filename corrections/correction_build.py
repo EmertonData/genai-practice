@@ -2,9 +2,9 @@
 
 chunk_string, vectorize_text, top_k_search and the ReAct loop assembly.
 
-`search_filings` reads `embedding_model`, `chunk_vectors`, `chunk_ids` and `all_chunks` from
-the surrounding scope, because that is how it is written in the notebook, where those names
-are already bound by the earlier exercises.
+Every function here takes what it needs as a parameter, so they can be imported and tested on
+their own. The notebook wraps `search_filings` in a small tool that supplies the model and the
+vectors, since those cannot be chosen by the LLM.
 """
 
 from collections.abc import Callable
@@ -93,25 +93,36 @@ SYSTEM_PROMPT = (
 )
 
 
-@tool
-def search_filings(query: str, k: int = 5) -> str:
-    """Search NVIDIA's filings and earnings calls for passages relevant to a question.
+def search_filings(
+    query: str,
+    k: int,
+    embedding_model: HuggingFaceEmbeddings,
+    chunk_vectors: NDArray[np.float32],
+    chunks: list[dict],
+) -> str:
+    """Find the passages of the corpus most relevant to a question.
 
     Parameters
     ----------
     query : str
         What to look for, in plain English.
-    k : int, optional
-        Number of passages to return, by default 5.
+    k : int
+        Number of passages to return.
+    embedding_model : HuggingFaceEmbeddings
+        The model used to turn the query into a vector.
+    chunk_vectors : NDArray[np.float32]
+        One row per chunk, in the same order as `chunks`.
+    chunks : list[dict]
+        The chunk records, each with an `id` and a `text`.
 
     Returns
     -------
     str
         The matching passages, each preceded by the id of the chunk it comes from.
     """
-    query_vector = embed_texts([query], embedding_model)[0]  # noqa: F821
-    indices = top_k_search(query_vector, chunk_vectors, k)  # noqa: F821
-    return "\n\n".join(f"[{chunk_ids[i]}] {all_chunks[i]['text']}" for i in indices)  # noqa: F821
+    query_vector = embed_texts([query], embedding_model)[0]
+    indices = top_k_search(query_vector, chunk_vectors, k)
+    return "\n\n".join(f"[{chunks[i]['id']}] {chunks[i]['text']}" for i in indices)
 
 
 @tool
@@ -143,12 +154,12 @@ def calculator(a: float, b: float, operation: str) -> float:
     raise ValueError(f"Unknown operation: {operation}")
 
 
-def make_agentic_rag(node: Callable[[State], State], tools: list[BaseTool]) -> CompiledStateGraph:
+def make_agentic_rag(node: Callable[..., State], tools: list[BaseTool]) -> CompiledStateGraph:
     """Wire the model and its tools into a ReAct loop.
 
     Parameters
     ----------
-    node : Callable[[State], State]
+    node : Callable[..., State]
         The node that calls the model, as written above.
     tools : list[BaseTool]
         The tools the model is allowed to call.
@@ -158,7 +169,9 @@ def make_agentic_rag(node: Callable[[State], State], tools: list[BaseTool]) -> C
     CompiledStateGraph
         The compiled agent, ready to be invoked.
     """
-    graph = StateGraph(State)
+    # ty reports a false positive here: even LangGraph's own MessagesState fails
+    # this bound. See https://github.com/astral-sh/ty (as of ty 0.0.83).
+    graph = StateGraph(State)  # ty: ignore[invalid-argument-type]
 
     graph.add_node("answer_or_call_tool", node)
     graph.add_node("tools", ToolNode(tools))
