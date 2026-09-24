@@ -84,15 +84,6 @@ def top_k_search(query_vector: NDArray[np.float32], chunk_vectors: NDArray[np.fl
     return np.argsort(scores)[::-1][:k].tolist()
 
 
-SYSTEM_PROMPT = (
-    "You answer questions about NVIDIA using the company's own filings and earnings calls. "
-    "Search the filings before answering a question about the company. "
-    "Base your answer only on the passages you retrieve, and cite the chunk ids you used. "
-    "If the passages do not contain the answer, say so plainly instead of guessing. "
-    "If a question makes no sense, say so."
-)
-
-
 def search_filings(
     query: str,
     k: int,
@@ -182,7 +173,7 @@ def make_agentic_rag(node: Callable[..., State], tools: list[BaseTool]) -> Compi
     return graph.compile()
 
 
-def answer_question(question: str, agent: CompiledStateGraph) -> str:
+def answer_question(question: str, agent: CompiledStateGraph, system_prompt: str) -> str:
     """Ask the agent one question and return its final answer.
 
     Parameters
@@ -191,11 +182,13 @@ def answer_question(question: str, agent: CompiledStateGraph) -> str:
         The question to ask.
     agent : CompiledStateGraph
         The compiled agent, as returned by `make_agentic_rag`.
+    system_prompt : str
+        The instructions the agent follows. Change it and the answer changes with it.
 
     Returns
     -------
     str
         The text of the agent's last message.
     """
-    messages = [SystemMessage(SYSTEM_PROMPT), HumanMessage(question)]
+    messages = [SystemMessage(system_prompt), HumanMessage(question)]
     return agent.invoke({"messages": messages})["messages"][-1].content
