@@ -8,7 +8,9 @@ Claude Code sessions working in this repo should proactively update the auto-mem
 
 ## Current state of this repo
 
-Session 2's notebook has its first exercise (`chunk_string`, §5.1) plus the cells that chunk the corpus; the rest of §5 is unwritten, and `notebooks/02_evaluate_faithfulness.ipynb` is still just a title cell. `instructor/*.py` are still stubs. Don't add descriptions ahead of the actual exercise content — describe an exercise when it's authored.
+Session 2's notebook has three exercises: `chunk_string` (§5.1), `embed_texts` (§5.2) and `top_k_search` (§5.4), each with its correction in `corrections/correction_build.py` and the cells that run it over the corpus. §5.3 ships as the given helpers `save_vectors`/`load_vectors` rather than an exercise. §5.5 (BM25) and §5.6 (the ReAct loop) are unwritten, `notebooks/02_evaluate_faithfulness.ipynb` is still just a title cell, and `instructor/*.py` are still stubs. Don't add descriptions ahead of the actual exercise content — describe an exercise when it's authored.
+
+**Dense retrieval is weak on this corpus.** Measured while writing §5.4: on the 7 questions whose reference answer carries a distinctive number, `all-MiniLM-L6-v2` finds the answer chunk in 2/7 at k=5 against 5/7 for a throwaway BM25, and the chunk holding NVIDIA's FY2026 revenue ranks 23rd of 922 for the question that asks for it. It works on thematic questions and fails on table lookups, which is why the §5.4 demo cell uses question 12 rather than question 1. This is the open input to the §5.5 decision.
 
 Dependencies are added as each exercise needs them (see the dependency policy below). The ReAct loop uses **LangGraph**: issue #7 specifies `make_agentic_rag(...) -> StateGraph`, which settles the §5.6 question. Once a test setup exists, add the commands here.
 
