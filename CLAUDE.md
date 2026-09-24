@@ -12,7 +12,9 @@ Claude Code sessions working in this repo should proactively update the auto-mem
 
 The agent is a hand-built `StateGraph` rather than LangChain's prebuilt `create_agent`, so the conditional edge and the loop-back edge stay visible. `State` lives in `utils/build.py` and is given. `search_filings` takes its model, vectors and chunks as parameters, and the notebook wraps it in a small `@tool` so the LLM only ever chooses `query` and `k` — a `functools.partial` cannot be used here, because `@tool` rejects an object with no `__name__`.
 
-Still to do: `notebooks/02_evaluate_faithfulness.ipynb` is a title cell and `instructor/*.py` are stubs. Don't add descriptions ahead of the actual exercise content — describe an exercise when it's authored.
+**Session 4 is under way, on `feat/6.1-paragraph-claims`** (branched from PR #12's branch, so its PR is based on that branch and retargeted to `main` once #12 merges). The faithful half of the claims dataset is done: `data/05_questions/paragraph_claims.json` holds one faithful claim for each of 400 chunks. The unfaithful half comes next, one claim per chunk on the same 400. See "Ground truth for faithfulness" below for how the claims are made.
+
+Still to do: the unfaithful claims, `notebooks/02_evaluate_faithfulness.ipynb` (a title cell) and `instructor/run_judge_scores.py` (a stub). Don't add descriptions ahead of the actual exercise content — describe an exercise when it's authored.
 
 **Measured, so don't re-derive:** the notebook runs top to bottom in 43 seconds, and its five agent calls cost $0.033 per run (24,259 input / 1,659 output tokens at Haiku 4.5 rates).
 
@@ -93,7 +95,9 @@ Session 4 depends on Session 2 being fully finished (exercises + corrections) fi
 
 ```
 instructor/                     # instructor-only scripts (not shown to students)
-  generate_paragraph_claims.py  # taxonomy-driven claim generation
+  sample_chunks.py              # draw the 400 chunks the claims are written from
+  prompts/faithful_claim.md     # instructions given to the claim-writing subagents
+  generate_paragraph_claims.py  # merge and check the subagents' claim batches
   run_judge_scores.py           # precompute judge faithfulness scores
 utils/                          # local package, installed by uv sync
   __init__.py
@@ -111,6 +115,7 @@ data/                           # numbered pipeline stages
   04_vectors/                   # generated in the workshop (gitignored)
   05_questions/
     questions.json              # 20 due-diligence questions (build session)
+    sampled_chunks.json         # the 400 chunks claims are written from (output of instructor/sample_chunks.py)
     paragraph_claims.json       # output of instructor/generate_paragraph_claims.py
     judge_scores.json           # output of instructor/run_judge_scores.py
 pyproject.toml
@@ -119,14 +124,20 @@ uv.lock
 README.md
 ```
 
-`instructor/` scripts are one-time, instructor-run batch jobs against the shared API key (see below) — they exist so dataset regeneration (e.g. a source PDF or taxonomy change) is reproducible instead of manual. They are never distributed to students. (Named `instructor/`, not `build/`, to avoid colliding with the conventional meaning of a `build/` directory in Python packaging.)
+`instructor/` scripts are one-time, instructor-run batch jobs (the claims dataset is the exception: subagents write it, and the scripts only sample and merge) — they exist so dataset regeneration (e.g. a source PDF or taxonomy change) is reproducible instead of manual. They are never distributed to students. (Named `instructor/`, not `build/`, to avoid colliding with the conventional meaning of a `build/` directory in Python packaging.)
 
 **`data/` stages 01 and 02 are tracked; 03 and 04 are gitignored** apart from their `.gitkeep`, since chunks and vectors are produced during the workshop. Only 2025 and 2026 documents are in scope — the 2024 files were moved out of the repo to `~/Documents/code/genai-practice-archive/`.
 
 ## Key architectural decisions to preserve
 
 - **Single shared Anthropic API key** for all 70 students plus instructor prep/judge runs (`ANTHROPIC_API_KEY`, the only env var any notebook needs). There's no per-key model restriction, so notebooks must pin students to Haiku by default; a console-side spend limit is the backstop, not the primary control.
-- **Ground truth for faithfulness is constructed, not annotated.** `paragraph_claims.json` is built by prompting a strong LLM (Opus) to (1) paraphrase each chunk faithfully and (2) rewrite it unfaithfully per applicable category from the fixed 10-category hallucination taxonomy in preparation.md §6. This yields several hundred (paragraph, claim, true_label, error_type) pairs with `true_faithfulness_label` known by construction — a deliberately different, cheaper source of ground truth than judging real end-to-end RAG answers.
+- **Ground truth for faithfulness is constructed, not annotated.** Each claim is written to be faithful or unfaithful, so its `true_faithfulness_label` is known by construction. That is a deliberately different, cheaper source of ground truth than judging real end-to-end RAG answers. The pipeline runs as follows:
+  1. `instructor/sample_chunks.py` draws 400 of the 922 chunks with a fixed seed and pins them in `data/05_questions/sampled_chunks.json`, since `03_chunks/` is gitignored.
+  2. Claude Code subagents, not an API script, write the claims (8 agents of 50 chunks), so the shared key stays for students. Their instructions are committed in `instructor/prompts/faithful_claim.md`: a faithful claim must be *deducible* from the chunk alone, not necessarily a paraphrase. It may compare two stated figures but never compute a new one, and it is at most 20 words.
+  3. `instructor/generate_paragraph_claims.py <batch_dir>` merges the agents' batch files, joins each claim to its chunk text and checks the result. The batches live outside the repo and are deleted afterwards.
+  4. A second set of subagents verifies every claim against its chunk, and flagged claims are reviewed by hand. On the faithful half this found 3 wrong claims out of 400, below the 2% threshold that would have meant revising the prompt. 17 claims were corrected by hand in total.
+
+  Give the writing agents only the chunk text: on the faithful pass they read the record's `year` field and leaked it into four claims. The judge prompt (§7.1) must say what the prompt told the writers, that the chunks come from NVIDIA 10-Ks and earnings calls, since claims say "NVIDIA" where the chunk says "we".
 - **Judge scores are precomputed centrally** (`instructor/run_judge_scores.py` → `judge_scores.json`) rather than having every student call the judge on the same fixed data, to protect the shared spend limit and keep everyone's proxy labels identical. Students only make one or two *live* judge calls themselves, for illustration.
 - **The labeled/proxy split for GLIDE is drawn live in the notebook**, not precomputed — students call a `glide.samplers` sampler (e.g. `StratifiedSampler` stratified on `error_type`, or `UniformSampler`) against `paragraph_claims.json` to pick which ids get their true label "revealed." This is intentional: students should see GLIDE's sampling API in action, not just its estimators.
 - Unfaithful claims must stay *subtly* wrong (in the spirit of the Contresens/Troncature/Simplification taxonomy categories), not absurdly wrong — an easy claim the judge always catches produces no bias for GLIDE to visibly correct, which kills the intended "aha" moment when comparing the naive judge-mean estimate to the GLIDE debiased estimate.
