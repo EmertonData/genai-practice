@@ -18,4 +18,4 @@ The verdict is a label:
 
 Return only a JSON object, with no text before or after it:
 
-{"reasoning": "<one sentence checking the claim's information against the chunk>", "verdict": <0 or 1>}
+{"reasoning": "<one or two sentences checking the claim's information against the chunk>", "verdict": <0 or 1>}
