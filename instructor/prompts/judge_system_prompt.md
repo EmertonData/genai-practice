@@ -6,8 +6,8 @@ Proceed as follows:
 
 1. Read the chunk in full.
 2. Read the claim in full.
-3. Check whether each piece of information in the claim follows from the chunk.
-4. Conclude with a verdict.
+3. Check whether each piece of information in the claim follows from the chunk, and write this reasoning down in under 100 words.
+4. Only then, give the verdict that follows from your reasoning.
 
 Judge the claim against the chunk alone, without outside knowledge: a claim that is true in the world but not supported by the chunk is not deducible. The chunk was cut at a fixed length, so it may start or end mid-sentence or mix table rows with prose.
 
@@ -18,4 +18,4 @@ The verdict is a label:
 
 Return only a JSON object, with no text before or after it:
 
-{"reasoning": "<one or two sentences checking the claim's information against the chunk>", "verdict": <0 or 1>}
+{"reasoning": "<your reasoning, in under 100 words>", "verdict": <0 or 1>}

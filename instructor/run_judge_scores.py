@@ -133,7 +133,7 @@ def main() -> None:
     load_dotenv()
     rows = json.loads(PARAGRAPH_CLAIMS.read_text())
     system_prompt = JUDGE_SYSTEM_PROMPT.read_text()
-    llm = ChatAnthropic(model=MODEL, temperature=0.0, max_tokens=150)
+    llm = ChatAnthropic(model=MODEL, temperature=0.0, max_tokens=200)
 
     start = time.perf_counter()
     results = judge_all(rows, llm, system_prompt, WORKERS)
