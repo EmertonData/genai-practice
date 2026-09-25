@@ -7,8 +7,11 @@ so they come ready-made and the exercises stay on the RAG concepts.
 import json
 import re
 from pathlib import Path
+from typing import Annotated, TypedDict
 
 import numpy as np
+from langchain_core.messages import BaseMessage
+from langgraph.graph import add_messages
 from numpy.typing import NDArray
 from pypdf import PdfReader
 
@@ -27,7 +30,10 @@ def load_document(input_path: str) -> tuple[str, int]:
         The full text of the document, and the fiscal year read from its file name.
     """
     path = Path(input_path)
-    year = int(re.search(r"\d{4}", path.stem).group())
+    match = re.search(r"\d{4}", path.stem)
+    if match is None:
+        raise ValueError(f"no 4-digit year found in file name: {path.name}")
+    year = int(match.group())
 
     if path.suffix == ".pdf":
         pages = [page.extract_text() or "" for page in PdfReader(path).pages]
@@ -119,3 +125,16 @@ def load_vectors(input_path: str) -> tuple[NDArray[np.float32], list[str]]:
     """
     loaded = np.load(input_path)
     return loaded["vectors"], loaded["chunk_ids"].tolist()
+
+
+class State(TypedDict, total=False):
+    """What travels through the agent while it works on one question.
+
+    `add_messages` is a reducer. A node returns only the message it just produced and the
+    reducer appends it, so each round of tool calling adds to what the model can see next.
+
+    Nothing carries over between questions: the agent has no memory, so every run starts from
+    an empty list.
+    """
+
+    messages: Annotated[list[BaseMessage], add_messages]

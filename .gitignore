@@ -41,3 +41,6 @@ data/03_chunks/*
 !data/03_chunks/.gitkeep
 data/04_vectors/*
 !data/04_vectors/.gitkeep
+
+# Diagram sources; only the rendered PNG is shipped
+notebooks/assets/*.svg

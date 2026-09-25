@@ -4,9 +4,12 @@ version = "0.1.0"
 description = "GenAI in Practice workshop materials"
 requires-python = ">=3.12"
 dependencies = [
+    "langchain-anthropic>=1.7.3",
     "langchain-huggingface[full]>=1.2.2",
     "langchain-text-splitters>=1.1.2",
+    "langgraph>=1.2.12",
     "pypdf>=6.18.1",
+    "python-dotenv>=1.2.3",
 ]
 
 [build-system]
@@ -21,17 +24,17 @@ dev = [
     "nbformat>=5.11.1",
     "prek>=0.5.3",
     "ruff>=0.16.8",
+    "ty>=0.0.83",
 ]
 
 [tool.uv]
 default-groups = []
 
+[tool.ty.src]
+exclude = ["notebooks/*.ipynb"]
+
 [tool.ruff]
 line-length = 120
 fix = true
 lint.select = ["E", "F", "I"]
-
-# An exercise stub leaves the imports and variables it is given unused until the student
-# fills it in, which ruff reads as dead code and, with fix = true, deletes. Formatting still
-# applies to the notebooks; only the lint rules are switched off.
 lint.exclude = ["notebooks/*.ipynb"]

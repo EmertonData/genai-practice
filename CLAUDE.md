@@ -8,7 +8,13 @@ Claude Code sessions working in this repo should proactively update the auto-mem
 
 ## Current state of this repo
 
-Session 2's notebook has three exercises: `chunk_string` (§5.1), `embed_texts` (§5.2) and `top_k_search` (§5.4), each with its correction in `corrections/correction_build.py` and the cells that run it over the corpus. §5.3 ships as the given helpers `save_vectors`/`load_vectors` rather than an exercise. §5.5 (BM25) and §5.6 (the ReAct loop) are unwritten, `notebooks/02_evaluate_faithfulness.ipynb` is still just a title cell, and `instructor/*.py` are still stubs. Don't add descriptions ahead of the actual exercise content — describe an exercise when it's authored.
+**Session 2's notebook is complete and verified against the real API.** It runs in two parts. Part 1 builds the retrieval pipeline: `chunk_string` (§5.1), `embed_texts` (§5.2) and `top_k_search` (§5.4). Part 2 builds the agent: the two tools (`search_filings` and `calculator`) and the LangGraph loop in `make_agentic_rag` (§5.6). §5.3 ships as the given helpers `save_vectors`/`load_vectors`, and §5.5 (BM25) was dropped. Every exercise has its correction in `corrections/correction_build.py`.
+
+The agent is a hand-built `StateGraph` rather than LangChain's prebuilt `create_agent`, so the conditional edge and the loop-back edge stay visible. `State` lives in `utils/build.py` and is given. `search_filings` takes its model, vectors and chunks as parameters, and the notebook wraps it in a small `@tool` so the LLM only ever chooses `query` and `k` — a `functools.partial` cannot be used here, because `@tool` rejects an object with no `__name__`.
+
+Still to do: `notebooks/02_evaluate_faithfulness.ipynb` is a title cell and `instructor/*.py` are stubs. Don't add descriptions ahead of the actual exercise content — describe an exercise when it's authored.
+
+**Measured, so don't re-derive:** the notebook runs top to bottom in 43 seconds, and its five agent calls cost $0.033 per run (24,259 input / 1,659 output tokens at Haiku 4.5 rates).
 
 **Dense retrieval is weak on this corpus.** Measured while writing §5.4: on the 7 questions whose reference answer carries a distinctive number, `all-MiniLM-L6-v2` finds the answer chunk in 2/7 at k=5 against 5/7 for a throwaway BM25, and the chunk holding NVIDIA's FY2026 revenue ranks 23rd of 922 for the question that asks for it. It works on thematic questions and fails on table lookups, which is why the §5.4 demo cell uses question 12 rather than question 1. This is the open input to the §5.5 decision.
 
@@ -18,7 +24,8 @@ Dependencies are added as each exercise needs them (see the dependency policy be
 
 - **One cell = one job**, each preceded by a short markdown cell. Keep both short, avoid the "wall of text" risk once eight exercises each carry commentary.
 - **Exercise statements follow a fixed order**: motivation and stakes → objective → task ("complete the function, respecting its signature and docstring") → hint, placed after the code cell.
-- **One exercise = one function**, signature typed and numpy docstring given, body left to the student, marked with `# YOUR CODE HERE` and nothing else (no `raise NotImplementedError`). Ship the simplest thing that works; improvements go in a 3-bullet synthesis at the very end of the finished notebook, not after each exercise.
+- **One exercise = one function**, signature typed and numpy docstring given, body left to the student. An exercise may group two closely related functions under one heading when they are one idea (§5.6 does this for the two tools). Ship the simplest thing that works; improvements go in a numbered synthesis at the very end of the finished notebook, not after each exercise.
+- **A stub shows the shape of the answer, not a blank body.** §5.1 to §5.4 used a bare `# YOUR CODE HERE`; §5.6 gives named steps (`query_vector = ...  # YOUR CODE HERE`), the branches of a conditional, or a line with only its arguments missing (`graph.add_node(..., ...)`), each introduced by a comment saying what it should do. Use `...` rather than an empty right-hand side, since `x =  # comment` is a `SyntaxError` and fails `ruff format`. Never `raise NotImplementedError`.
 - **Plumbing is given, not exercised.** Anything that teaches Python rather than RAG (reading a PDF, building a dict, writing JSON) lives in `utils/build.py` and is imported. Note the constraint: a helper in that module cannot call a function the student writes in the notebook, and putting the student's function in the module would hand them the solution — so composition happens in the notebook.
 - **Checks are inline `assert`s** on a small, representative example, ending in a `print("OK: …")`. No assert message: `assert x == y, x` reads like a stray tuple.
 - **Write prose, not telegrams, and avoid the tells of AI-written text.** Grégoire's PR #8 review named three: em-dashes, the binary "X, not Y" rhythm, and bullet lists of bare fragments. A section should read like a book, so introduce a list with a full sentence ("The next step is to orchestrate chunking across a list of documents. It proceeds as follows:") and make each item a sentence. Prefer the established term over an approximation (an `index`, not "one list"). Never address the instructor in student-facing text.
@@ -35,6 +42,7 @@ Environment is managed with [uv](https://docs.astral.sh/uv/); Python **>=3.12 is
 - `uv sync --group dev` — **what the two of us run.** Adds the tooling in the `dev` dependency group (`prek`, `ruff`, `nbformat`) on top of the student environment.
 - `uv run --group dev prek install` — **install the git pre-commit hooks, once per clone.** Without this the hooks never run and the problems they prevent come back.
 - `uv run --group dev prek run --all-files` — run every hook over the whole repo, rather than only on staged files.
+- `make lint` / `make type-check` — `ruff check --fix` and `ty check`. **Both must pass with no `# noqa` and no suppressions**, since a suppression hides a real problem rather than fixing it. The one documented exception is `StateGraph(State)` in `corrections/correction_build.py`: `ty` rejects it, and rejects LangGraph's own `MessagesState` identically, so no spelling of that line can satisfy it.
 
 **Students run plain `uv sync` and get none of the tooling.** `[tool.uv] default-groups = []` overrides uv's habit of installing the `dev` group by default, which keeps the student install limited to what the notebooks actually import. Anything added for our own workflow belongs in the `dev` group, never in `[project] dependencies`.
 
