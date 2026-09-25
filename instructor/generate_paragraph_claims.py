@@ -5,7 +5,7 @@ of 50 sampled chunks each: one faithful claim per chunk following
 instructor/prompts/faithful_claim.md, and one unfaithful claim per chunk following
 instructor/prompts/unfaithful_claim.md. This script merges their batch files, joins
 each claim back to the text of its chunk, checks the result and writes
-data/05_questions/paragraph_claims.json.
+data/06_claims/paragraph_claims.json.
 
 Usage: uv run python instructor/generate_paragraph_claims.py <batch_dir>
 """
@@ -15,8 +15,8 @@ import re
 import sys
 from pathlib import Path
 
-SAMPLED_CHUNKS = Path("data/05_questions/sampled_chunks.json")
-PARAGRAPH_CLAIMS = Path("data/05_questions/paragraph_claims.json")
+SAMPLED_CHUNKS = Path("data/06_claims/sampled_chunks.json")
+PARAGRAPH_CLAIMS = Path("data/06_claims/paragraph_claims.json")
 
 MAX_WORDS = 20
 CLAIM_KEYS = {"claim_id", "chunk_id", "claim", "true_faithfulness_label", "error_type"}

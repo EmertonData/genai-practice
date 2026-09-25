@@ -12,7 +12,7 @@ Claude Code sessions working in this repo should proactively update the auto-mem
 
 The agent is a hand-built `StateGraph` rather than LangChain's prebuilt `create_agent`, so the conditional edge and the loop-back edge stay visible. `State` lives in `utils/build.py` and is given. `search_filings` takes its model, vectors and chunks as parameters, and the notebook wraps it in a small `@tool` so the LLM only ever chooses `query` and `k` — a `functools.partial` cannot be used here, because `@tool` rejects an object with no `__name__`.
 
-**Session 4 is under way.** Session 2's PR #12 is merged. The claims dataset (§6.1) is done on `feat/6.1-paragraph-claims`: `data/05_questions/paragraph_claims.json` holds 800 claims, one faithful and one unfaithful for each of 400 chunks. See "Ground truth for faithfulness" below for how the claims are made. The Session 4 PRs are planned as follows: (1) this dataset, (2) the judge (§7.1 and §7.2), (3) the quality pass on the unfaithful claims (§6.2), done after the judge because its scores show which claims are too easy, and (4) the GLIDE exercise (§7.3 to §7.5).
+**Session 4 is under way.** Session 2's PR #12 is merged. The claims dataset (§6.1) is done on `feat/6.1-paragraph-claims`: `data/06_claims/paragraph_claims.json` holds 800 claims, one faithful and one unfaithful for each of 400 chunks. See "Ground truth for faithfulness" below for how the claims are made. The Session 4 PRs are planned as follows: (1) this dataset, (2) the judge (§7.1 and §7.2), (3) the quality pass on the unfaithful claims (§6.2), done after the judge because its scores show which claims are too easy, and (4) the GLIDE exercise (§7.3 to §7.5).
 
 Still to do: `notebooks/02_evaluate_faithfulness.ipynb` (a title cell) and `instructor/run_judge_scores.py` (a stub). Don't add descriptions ahead of the actual exercise content — describe an exercise when it's authored.
 
@@ -116,6 +116,7 @@ data/                           # numbered pipeline stages
   04_vectors/                   # generated in the workshop (gitignored)
   05_questions/
     questions.json              # 20 due-diligence questions (build session)
+  06_claims/                    # the faithfulness session's data (tracked)
     sampled_chunks.json         # the 400 chunks claims are written from (output of instructor/sample_chunks.py)
     paragraph_claims.json       # output of instructor/generate_paragraph_claims.py
     judge_scores.json           # output of instructor/run_judge_scores.py
@@ -127,13 +128,13 @@ README.md
 
 `instructor/` scripts are one-time, instructor-run batch jobs (the claims dataset is the exception: subagents write it, and the scripts only sample and merge) — they exist so dataset regeneration (e.g. a source PDF or taxonomy change) is reproducible instead of manual. They are never distributed to students. (Named `instructor/`, not `build/`, to avoid colliding with the conventional meaning of a `build/` directory in Python packaging.)
 
-**`data/` stages 01 and 02 are tracked; 03 and 04 are gitignored** apart from their `.gitkeep`, since chunks and vectors are produced during the workshop. Only 2025 and 2026 documents are in scope — the 2024 files were moved out of the repo to `~/Documents/code/genai-practice-archive/`.
+**`data/` stages 01, 02, 05 and 06 are tracked; 03 and 04 are gitignored** apart from their `.gitkeep`, since chunks and vectors are produced during the workshop. Only 2025 and 2026 documents are in scope — the 2024 files were moved out of the repo to `~/Documents/code/genai-practice-archive/`.
 
 ## Key architectural decisions to preserve
 
 - **Single shared Anthropic API key** for all 70 students plus instructor prep/judge runs (`ANTHROPIC_API_KEY`, the only env var any notebook needs). There's no per-key model restriction, so notebooks must pin students to Haiku by default; a console-side spend limit is the backstop, not the primary control.
 - **Ground truth for faithfulness is constructed, not annotated.** Each claim is written to be faithful or unfaithful, so its `true_faithfulness_label` is known by construction. That is a deliberately different, cheaper source of ground truth than judging real end-to-end RAG answers. The pipeline runs as follows:
-  1. `instructor/sample_chunks.py` draws 400 of the 922 chunks with a fixed seed and pins them in `data/05_questions/sampled_chunks.json`, since `03_chunks/` is gitignored.
+  1. `instructor/sample_chunks.py` draws 400 of the 922 chunks with a fixed seed and pins them in `data/06_claims/sampled_chunks.json`, since `03_chunks/` is gitignored.
   2. Claude Code subagents, not an API script, write the claims (8 agents of 50 chunks), so the shared key stays for students. Their instructions are committed in `instructor/prompts/faithful_claim.md`: a faithful claim must be *deducible* from the chunk alone, not necessarily a paraphrase. It may compare two stated figures but never compute a new one, and it is at most 20 words.
   3. `instructor/generate_paragraph_claims.py <batch_dir>` merges the agents' batch files, joins each claim to its chunk text and checks the result. The batches live outside the repo and are deleted afterwards.
   4. A second set of subagents verifies every claim against its chunk, and flagged claims are reviewed by hand. Both halves came in under the 2% threshold that would have meant revising the prompt: 3 wrong labels out of 400 faithful claims, 4 out of 400 unfaithful ones, all corrected.

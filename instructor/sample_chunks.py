@@ -1,7 +1,7 @@
 """Draw the chunks the faithfulness claims are written from (preparation.md §6.1).
 
 Reads data/03_chunks/all_chunks.json, as produced by the Session 2 notebook with
-chunk_size=1000 and overlap=200, and writes data/05_questions/sampled_chunks.json.
+chunk_size=1000 and overlap=200, and writes data/06_claims/sampled_chunks.json.
 The sample is tracked in git because data/03_chunks/ is not, which pins the exact
 paragraph text every claim is checked against.
 """
@@ -11,7 +11,7 @@ import random
 from pathlib import Path
 
 ALL_CHUNKS = Path("data/03_chunks/all_chunks.json")
-SAMPLED_CHUNKS = Path("data/05_questions/sampled_chunks.json")
+SAMPLED_CHUNKS = Path("data/06_claims/sampled_chunks.json")
 
 SEED = 42
 SAMPLE_SIZE = 400
