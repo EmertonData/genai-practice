@@ -23,7 +23,7 @@ The agent is a hand-built `StateGraph` rather than LangChain's prebuilt `create_
 4. Exercise 1, `score_faithfulness`, checked for free by a `FakeJudge` that records the messages it receives.
 5. Exercise 2, `accuracy_per_class`, checked on a hand-built example.
 6. A 10-claim test on the real model. The seed is 19, which gives 5/5 and 4/5, a typical sample; seed 0 happened to give 2/5.
-7. `judge_all` from `utils/evaluate.py`, which runs the student's function in parallel with a `tqdm` bar.
+7. `judge_all` from `utils/evaluate.py`, which runs the student's function in parallel with a `tqdm` bar. `save_verdicts` then writes the verdicts to `data/07_verdicts/verdicts.json`, so the GLIDE part reloads them with `load_verdicts` instead of judging again. The same function also reads the reference scores in `data/06_claims/judge_scores.json`, the fallback if a student's run failed.
 8. The accuracy on all 800 claims (99.8% faithful, 90% unfaithful, 95% overall), whose split shows the lenient bias.
 
 It deliberately does not show the rate judged faithful against the true 50%. The notebook never mentions cost, and the Session 2 key is reused as-is. The full dry run took 2 min 54 s with 0 failed calls.
@@ -136,6 +136,7 @@ data/                           # numbered pipeline stages
     sampled_chunks.json         # the 400 chunks claims are written from (output of instructor/sample_chunks.py)
     paragraph_claims.json       # output of instructor/generate_paragraph_claims.py
     judge_scores.json           # output of instructor/run_judge_scores.py
+  07_verdicts/                  # the students' own judge verdicts (gitignored)
 pyproject.toml
 uv.lock
 .env.example
@@ -144,7 +145,7 @@ README.md
 
 `instructor/` scripts are one-time, instructor-run batch jobs (the claims dataset is the exception: subagents write it, and the scripts only sample and merge) — they exist so dataset regeneration (e.g. a source PDF or taxonomy change) is reproducible instead of manual. They are never distributed to students. (Named `instructor/`, not `build/`, to avoid colliding with the conventional meaning of a `build/` directory in Python packaging.)
 
-**`data/` stages 01, 02, 05 and 06 are tracked; 03 and 04 are gitignored** apart from their `.gitkeep`, since chunks and vectors are produced during the workshop. Only 2025 and 2026 documents are in scope — the 2024 files were moved out of the repo to `~/Documents/code/genai-practice-archive/`.
+**`data/` stages 01, 02, 05 and 06 are tracked; 03, 04 and 07 are gitignored** apart from their `.gitkeep`, since chunks, vectors and verdicts are produced during the workshop. Only 2025 and 2026 documents are in scope — the 2024 files were moved out of the repo to `~/Documents/code/genai-practice-archive/`.
 
 ## Key architectural decisions to preserve
 
