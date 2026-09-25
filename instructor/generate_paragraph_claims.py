@@ -38,7 +38,7 @@ ERROR_TYPES = {
     "Exaggeration",
 }
 NUMBER = re.compile(r"\d[\d,]*(?:\.\d+)?")
-# Surface features a judge could use to tell the classes apart without reading the paragraph
+# Surface features a judge could use to tell the classes apart without reading the chunk
 SURFACE_FEATURES = {
     "contains a digit": re.compile(r"\d"),
     "mentions a year": re.compile(r"\b20\d\d\b"),
@@ -81,10 +81,10 @@ def check_rows(rows: list[dict], chunks: dict[str, dict], kind: str) -> None:
 
 
 def number_suspects(rows: list[dict]) -> list[tuple[str, set[str]]]:
-    """List the claims holding a number their paragraph does not contain, such as a computed figure."""
+    """List the claims holding a number their chunk does not contain, such as a computed figure."""
     suspects = []
     for row in rows:
-        missing = numbers_in(row["claim"]) - numbers_in(row["paragraph"])
+        missing = numbers_in(row["claim"]) - numbers_in(row["chunk"])
         if missing:
             suspects.append((row["claim_id"], missing))
     return suspects
@@ -117,12 +117,12 @@ def main() -> None:
         check_rows(rows, chunks, kind)
         by_kind[kind] = {row["chunk_id"]: row for row in rows}
 
-    # For each chunk in sample order, its faithful then its unfaithful claim, joined to its paragraph
+    # For each chunk in sample order, its faithful then its unfaithful claim, joined to the chunk text
     rows = [
         {
             **by_kind[kind][chunk["id"]],
             "distortion_note": by_kind[kind][chunk["id"]].get("distortion_note"),
-            "paragraph": chunk["text"],
+            "chunk": chunk["text"],
         }
         for chunk in sampled
         for kind in KINDS
@@ -132,7 +132,7 @@ def main() -> None:
 
     for kind, (_, label, _) in KINDS.items():
         suspects = number_suspects([row for row in rows if row["true_faithfulness_label"] == label])
-        print(f"{len(suspects)} {kind} claims hold a number absent from their paragraph:")
+        print(f"{len(suspects)} {kind} claims hold a number absent from their chunk:")
         for claim_id, missing in suspects:
             print(f"  {claim_id}: {sorted(missing)}")
 
