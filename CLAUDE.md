@@ -14,9 +14,21 @@ The agent is a hand-built `StateGraph` rather than LangChain's prebuilt `create_
 
 **Session 4 is under way.** The claims dataset (§6.1) is merged (PR #13): `data/06_claims/paragraph_claims.json` holds 800 claims, one faithful and one unfaithful for each of 400 chunks. See "Ground truth for faithfulness" below for how the claims are made. The Session 4 PRs are planned as follows: (1) this dataset, (2) the judge (§7.1 and §7.2), (3) the quality pass on the unfaithful claims (§6.2), done after the judge because its scores show which claims are too easy, and (4) the GLIDE exercise (§7.3 to §7.5).
 
-**The judge is validated, on `feat/7.1-judge`, and not yet in the notebook.** `score_faithfulness(chunk, claim, llm, system_prompt)` is in `corrections/correction_eval.py`: one claim per call, Haiku at temperature 0, returning `{"reasoning", "verdict"}`. The prompt, adapted from Fig. 6 of Grégoire's paper (arXiv 2507.21753), sits in `instructor/prompts/judge_system_prompt.md` until it moves into a notebook cell, passed as a parameter. It is zero-shot, on Grégoire's advice that examples bias the judge, and it forbids outside knowledge, unlike the paper's step 5. `instructor/measure_judge.py` checks it on 20 claims; `instructor/run_judge_scores.py` scores all 800 into `data/06_claims/judge_scores.json`. Don't tune the prompt on the judge's errors: its leniency is the bias GLIDE corrects.
+**The judge is validated and merged (PR #14).** `score_faithfulness(chunk, claim, llm, system_prompt)` is in `corrections/correction_eval.py`: one claim per call, Haiku at temperature 0, returning `{"reasoning", "verdict"}`. The prompt is adapted from Fig. 6 of Grégoire's paper (arXiv 2507.21753), which the notebook does not cite. It lives in two places that must stay byte-identical: `instructor/prompts/judge_system_prompt.md`, read by the instructor scripts, and the notebook's `JUDGE_PROMPT` cell. It is zero-shot, on Grégoire's advice that examples bias the judge, and it forbids outside knowledge, unlike the paper's step 5. `instructor/measure_judge.py` checks it on 20 claims; `instructor/run_judge_scores.py` scores all 800 into `data/06_claims/judge_scores.json`. Don't tune the prompt on the judge's errors: its leniency is the bias GLIDE corrects.
 
-Still to do: `notebooks/02_evaluate_faithfulness.ipynb` (a title cell).
+**Session 4's notebook, part 1 (the judge), is written and dry-run** on `feat/7.1-notebook-judge`. It runs as follows:
+1. An intro on why faithfulness is hard to measure.
+2. The claims, shown as a table, then one faithful/unfaithful pair under its chunk.
+3. The judge: the model, then the given `JUDGE_PROMPT` with its rules.
+4. Exercise 1, `score_faithfulness`, checked for free by a `FakeJudge` that records the messages it receives.
+5. Exercise 2, `accuracy_per_class`, checked on a hand-built example.
+6. A 10-claim test on the real model. The seed is 19, which gives 5/5 and 4/5, a typical sample; seed 0 happened to give 2/5.
+7. `judge_all` from `utils/evaluate.py`, which runs the student's function in parallel with a `tqdm` bar. `save_verdicts` then writes the verdicts to `data/07_verdicts/verdicts.json`, so the GLIDE part reloads them with `load_verdicts` instead of judging again. The same function also reads the reference scores in `data/06_claims/judge_scores.json`, the fallback if a student's run failed.
+8. The accuracy on all 800 claims (99.8% faithful, 90% unfaithful, 95% overall), whose split shows the lenient bias.
+
+It deliberately does not show the rate judged faithful against the true 50%. The notebook never mentions cost, and the Session 2 key is reused as-is. The full dry run took 2 min 54 s with 0 failed calls.
+
+Still to do: part 2 of the notebook, GLIDE (§7.3-§7.5).
 
 **Measured on the judge, so don't re-derive** (all 800 claims, 2026-09-25, after Grégoire's review of PR #14): 399/400 faithful claims judged correctly and 361/400 unfaithful ones, so the judge is lenient. It says 54.8% of claims are faithful where the truth is 50.0%. It misses mostly Simplification (38% caught), then Acronym and Truncation (80%) and Exaggeration (85%); everything else is caught at 97-100%. The run cost $0.90 and took 2.7 minutes with 8 calls in parallel (about 600 input and 105 output tokens per claim), with no failed call. The prompt asks for reasoning first, under 100 words, and `max_tokens=200`: an earlier cap of 150 truncated 23 replies. Dropping the `reasoning` field does not save tokens: on 20 claims Haiku then reasoned in free text before the JSON, which broke 15 replies and raised output to 131 tokens a claim. The shared key's limits are 10,000 requests, 10M input and 2M output tokens per minute: one student uses about 330 requests a minute, so 70 students starting in the same minute would need 2.3× the request limit. Don't add descriptions ahead of the actual exercise content — describe an exercise when it's authored.
 
@@ -124,6 +136,7 @@ data/                           # numbered pipeline stages
     sampled_chunks.json         # the 400 chunks claims are written from (output of instructor/sample_chunks.py)
     paragraph_claims.json       # output of instructor/generate_paragraph_claims.py
     judge_scores.json           # output of instructor/run_judge_scores.py
+  07_verdicts/                  # the students' own judge verdicts (gitignored)
 pyproject.toml
 uv.lock
 .env.example
@@ -132,7 +145,7 @@ README.md
 
 `instructor/` scripts are one-time, instructor-run batch jobs (the claims dataset is the exception: subagents write it, and the scripts only sample and merge) — they exist so dataset regeneration (e.g. a source PDF or taxonomy change) is reproducible instead of manual. They are never distributed to students. (Named `instructor/`, not `build/`, to avoid colliding with the conventional meaning of a `build/` directory in Python packaging.)
 
-**`data/` stages 01, 02, 05 and 06 are tracked; 03 and 04 are gitignored** apart from their `.gitkeep`, since chunks and vectors are produced during the workshop. Only 2025 and 2026 documents are in scope — the 2024 files were moved out of the repo to `~/Documents/code/genai-practice-archive/`.
+**`data/` stages 01, 02, 05 and 06 are tracked; 03, 04 and 07 are gitignored** apart from their `.gitkeep`, since chunks, vectors and verdicts are produced during the workshop. Only 2025 and 2026 documents are in scope — the 2024 files were moved out of the repo to `~/Documents/code/genai-practice-archive/`.
 
 ## Key architectural decisions to preserve
 
