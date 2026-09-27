@@ -5,6 +5,7 @@ from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
+import matplotlib.pyplot as plt
 import numpy as np
 from langchain_anthropic import ChatAnthropic
 from numpy.typing import NDArray
@@ -74,17 +75,55 @@ def save_verdicts(verdicts: NDArray[np.float64], claims: list[dict], output_path
     Path(output_path).write_text(json.dumps(rows, indent=2))
 
 
-def load_verdicts(input_path: str) -> dict[str, int | None]:
+def load_verdicts(input_path: str, claims: list[dict]) -> NDArray[np.float64]:
     """Read verdicts written by `save_verdicts`, or the reference scores in `judge_scores.json`.
 
     Parameters
     ----------
     input_path : str
         Path to the JSON file to read.
+    claims : list[dict]
+        The claims, each with a "claim_id", in the order the verdicts should follow.
 
     Returns
     -------
-    dict[str, int | None]
-        The verdict of each claim, keyed by claim id.
+    NDArray[np.float64]
+        One verdict per claim, in the same order as `claims`: 1 if faithful, 0 if not, and NaN
+        if the file has no verdict for it.
     """
-    return {row["claim_id"]: row["verdict"] for row in json.loads(Path(input_path).read_text())}
+    verdict_of = {row["claim_id"]: row["verdict"] for row in json.loads(Path(input_path).read_text())}
+    verdicts = [verdict_of.get(claim["claim_id"]) for claim in claims]
+    return np.array([np.nan if verdict is None else verdict for verdict in verdicts], dtype=float)
+
+
+def plot_estimates(results: list, labels: list[str]) -> None:
+    """Draw each estimate of the faithfulness rate as a point inside its confidence interval.
+
+    Parameters
+    ----------
+    results : list
+        GLIDE results, each with a `mean` and a `confidence_interval`.
+    labels : list[str]
+        The name of each estimate, in the same order as `results`.
+
+    Returns
+    -------
+    None
+    """
+    colors = ["red", "steelblue", "purple"]
+    fig, ax = plt.subplots(figsize=(10, 4.5))
+    for y, (result, label, color) in enumerate(zip(results, labels, colors)):
+        low, high = result.confidence_interval.lower_bound, result.confidence_interval.upper_bound
+        ax.plot([low, high], [y, y], color=color, linewidth=4, solid_capstyle="round")
+        ax.scatter(result.mean, y, s=150, color=color, edgecolors="white", linewidths=2, zorder=3)
+        ax.text(result.mean, y - 0.25, f"{result.mean:.1%}", ha="center", color=color, fontweight="bold")
+        ax.text(result.mean, y + 0.4, f"[{low:.1%}, {high:.1%}]", ha="center", color="gray")
+    ax.set_yticks(range(len(labels)), labels)
+    ax.set_ylim(-0.8, len(labels) - 0.2)
+    ax.invert_yaxis()
+    ax.xaxis.set_major_formatter(plt.FuncFormatter(lambda value, _: f"{value:.0%}"))
+    ax.set_xlabel("Faithfulness rate")
+    ax.spines[["top", "right", "left"]].set_visible(False)
+    ax.tick_params(left=False)
+    fig.tight_layout()
+    plt.show()
