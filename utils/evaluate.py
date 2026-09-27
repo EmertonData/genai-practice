@@ -5,7 +5,9 @@ from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
+import numpy as np
 from langchain_anthropic import ChatAnthropic
+from numpy.typing import NDArray
 from tqdm import tqdm
 
 
@@ -15,7 +17,7 @@ def judge_all(
     llm: ChatAnthropic,
     system_prompt: str,
     max_workers: int = 8,
-) -> list[int | None]:
+) -> NDArray[np.float64]:
     """Judge every claim with `score_fn`, several calls at a time, showing a progress bar.
 
     Parameters
@@ -34,30 +36,30 @@ def judge_all(
 
     Returns
     -------
-    list[int | None]
-        One verdict per claim, in the same order as `claims`: 1 if faithful, 0 if not, and
-        None if the call failed.
+    NDArray[np.float64]
+        One verdict per claim, in the same order as `claims`: 1 if faithful, 0 if not, and NaN
+        if the call failed.
     """
 
-    def verdict(claim: dict) -> int | None:
+    def verdict(claim: dict) -> float:
         try:
-            return score_fn(claim["chunk"], claim["claim"], llm, system_prompt)["verdict"]
+            return float(score_fn(claim["chunk"], claim["claim"], llm, system_prompt)["verdict"])
         except Exception:  # one failed call must not stop the whole run
-            return None
+            return np.nan
 
     with ThreadPoolExecutor(max_workers=max_workers) as pool:
-        return list(tqdm(pool.map(verdict, claims), total=len(claims), desc="judging"))
+        return np.array(list(tqdm(pool.map(verdict, claims), total=len(claims), desc="judging")))
 
 
-def save_verdicts(verdicts: list[int | None], claim_ids: list[str], output_path: str) -> None:
-    """Write the verdicts and their claim ids to a JSON file, replacing any existing content.
+def save_verdicts(verdicts: NDArray[np.float64], claims: list[dict], output_path: str) -> None:
+    """Write each claim's id and verdict to a JSON file, replacing any existing content.
 
     Parameters
     ----------
-    verdicts : list[int | None]
-        One verdict per claim, 1, 0 or None.
-    claim_ids : list[str]
-        The claim ids, in the same order as `verdicts`.
+    verdicts : NDArray[np.float64]
+        One verdict per claim, as returned by `judge_all`. NaN is written as null.
+    claims : list[dict]
+        The judged claims, each with a "claim_id", in the same order as `verdicts`.
     output_path : str
         Path to the JSON file to write.
 
@@ -65,7 +67,10 @@ def save_verdicts(verdicts: list[int | None], claim_ids: list[str], output_path:
     -------
     None
     """
-    rows = [{"claim_id": claim_id, "verdict": verdict} for claim_id, verdict in zip(claim_ids, verdicts)]
+    rows = [
+        {"claim_id": claim["claim_id"], "verdict": None if np.isnan(verdict) else int(verdict)}
+        for claim, verdict in zip(claims, verdicts)
+    ]
     Path(output_path).write_text(json.dumps(rows, indent=2))
 
 

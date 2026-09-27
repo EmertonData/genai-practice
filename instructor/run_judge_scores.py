@@ -2,7 +2,7 @@
 
 Instructor-only, run once against the shared API key over every claim in
 data/06_claims/paragraph_claims.json, with the judge prompt in
-instructor/prompts/judge_system_prompt.md. Writes data/06_claims/judge_scores.json and prints
+corrections/correction_eval.py. Writes data/06_claims/judge_scores.json and prints
 the judge's accuracy per class and per error type, the naive judge estimate of the faithfulness
 rate next to the true one, and the cost and time of the run.
 
@@ -18,10 +18,10 @@ from pathlib import Path
 from dotenv import load_dotenv
 from langchain_anthropic import ChatAnthropic
 
+from corrections.correction_eval import JUDGE_PROMPT
 from instructor.measure_judge import judge
 
 PARAGRAPH_CLAIMS = Path("data/06_claims/paragraph_claims.json")
-JUDGE_SYSTEM_PROMPT = Path("instructor/prompts/judge_system_prompt.md")
 JUDGE_SCORES = Path("data/06_claims/judge_scores.json")
 
 MODEL = "claude-haiku-4-5-20251001"
@@ -132,7 +132,7 @@ def main() -> None:
     """
     load_dotenv()
     rows = json.loads(PARAGRAPH_CLAIMS.read_text())
-    system_prompt = JUDGE_SYSTEM_PROMPT.read_text()
+    system_prompt = JUDGE_PROMPT
     llm = ChatAnthropic(model=MODEL, temperature=0.0, max_tokens=200)
 
     start = time.perf_counter()
