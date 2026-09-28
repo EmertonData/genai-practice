@@ -5,8 +5,9 @@ from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
-import matplotlib.pyplot as plt
 import numpy as np
+import plotly.graph_objects as go
+from glide.mean_inference_results import MeanInferenceResult
 from langchain_anthropic import ChatAnthropic
 from numpy.typing import NDArray
 from tqdm import tqdm
@@ -96,34 +97,54 @@ def load_verdicts(input_path: str, claims: list[dict]) -> NDArray[np.float64]:
     return np.array([np.nan if verdict is None else verdict for verdict in verdicts], dtype=float)
 
 
-def plot_estimates(results: list, labels: list[str]) -> None:
-    """Draw each estimate of the faithfulness rate as a point inside its confidence interval.
+def plot_estimates(results: list[MeanInferenceResult], labels: list[str]) -> None:
+    """Draw each estimate of the faithfulness rate as a point with its confidence interval.
 
     Parameters
     ----------
-    results : list
+    results : list[MeanInferenceResult]
         GLIDE results, each with a `mean` and a `confidence_interval`.
     labels : list[str]
-        The name of each estimate, in the same order as `results`.
+        The name of each estimate, in the same order as `results`. Use `<br>` for a line break.
 
     Returns
     -------
     None
     """
     colors = ["red", "steelblue", "purple"]
-    fig, ax = plt.subplots(figsize=(10, 4.5))
-    for y, (result, label, color) in enumerate(zip(results, labels, colors)):
+    fig = go.Figure()
+    for result, label, color in zip(results, labels, colors):
         low, high = result.confidence_interval.lower_bound, result.confidence_interval.upper_bound
-        ax.plot([low, high], [y, y], color=color, linewidth=4, solid_capstyle="round")
-        ax.scatter(result.mean, y, s=150, color=color, edgecolors="white", linewidths=2, zorder=3)
-        ax.text(result.mean, y - 0.25, f"{result.mean:.1%}", ha="center", color=color, fontweight="bold")
-        ax.text(result.mean, y + 0.4, f"[{low:.1%}, {high:.1%}]", ha="center", color="gray")
-    ax.set_yticks(range(len(labels)), labels)
-    ax.set_ylim(-0.8, len(labels) - 0.2)
-    ax.invert_yaxis()
-    ax.xaxis.set_major_formatter(plt.FuncFormatter(lambda value, _: f"{value:.0%}"))
-    ax.set_xlabel("Faithfulness rate")
-    ax.spines[["top", "right", "left"]].set_visible(False)
-    ax.tick_params(left=False)
-    fig.tight_layout()
-    plt.show()
+        name = label.split("<br>")[0]
+        fig.add_trace(
+            go.Scatter(
+                x=[result.mean],
+                y=[label],
+                mode="markers+text",
+                marker={"color": color, "size": 14},
+                error_x={
+                    "type": "data",
+                    "symmetric": False,
+                    "array": [high - result.mean],
+                    "arrayminus": [result.mean - low],
+                    "color": color,
+                    "thickness": 4,
+                    "width": 10,
+                },
+                text=[f"{result.mean:.1%}"],
+                textposition="top center",
+                textfont={"color": color, "size": 16},
+                showlegend=False,
+                hovertemplate=f"{name}: %{{x:.1%}} [{low:.1%}, {high:.1%}]<extra></extra>",
+            )
+        )
+    fig.update_layout(
+        hovermode="closest",
+        font={"family": "Times New Roman", "color": "dimgray", "size": 15},
+        plot_bgcolor="whitesmoke",
+        xaxis={"title": "Faithfulness rate", "tickformat": ".0%", "gridcolor": "white"},
+        yaxis={"range": [len(labels) - 0.5, -0.8], "gridcolor": "white"},
+        height=400,
+        margin={"l": 20, "r": 20, "t": 30, "b": 50},
+    )
+    fig.show()

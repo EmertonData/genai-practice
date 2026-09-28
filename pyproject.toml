@@ -9,7 +9,8 @@ dependencies = [
     "langchain-huggingface[full]>=1.2.2",
     "langchain-text-splitters>=1.1.2",
     "langgraph>=1.2.12",
-    "matplotlib>=3.11.2",
+    "nbformat>=5.11.1",
+    "plotly>=7.1.0",
     "pypdf>=6.18.1",
     "python-dotenv>=1.2.3",
     "tqdm>=4.70.1",
@@ -24,7 +25,6 @@ packages = ["utils"]
 
 [dependency-groups]
 dev = [
-    "nbformat>=5.11.1",
     "prek>=0.5.3",
     "ruff>=0.16.8",
     "ty>=0.0.83",

@@ -59,7 +59,7 @@ Environment is managed with [uv](https://docs.astral.sh/uv/); Python **>=3.12 is
 - `uv run python <script>` — run a script (e.g. `instructor/generate_paragraph_claims.py`) inside the project environment.
 - `uv add <package>` / `uv remove <package>` — change dependencies (updates `pyproject.toml` and `uv.lock` together; don't hand-edit the dependency list and forget to re-lock).
 - `uv lock` — re-resolve and refresh `uv.lock` after a manual `pyproject.toml` edit.
-- `uv sync --group dev` — **what the two of us run.** Adds the tooling in the `dev` dependency group (`prek`, `ruff`, `nbformat`) on top of the student environment.
+- `uv sync --group dev` — **what the two of us run.** Adds the tooling in the `dev` dependency group (`prek`, `ruff`, `ty`) on top of the student environment.
 - `uv run --group dev prek install` — **install the git pre-commit hooks, once per clone.** Without this the hooks never run and the problems they prevent come back.
 - `uv run --group dev prek run --all-files` — run every hook over the whole repo, rather than only on staged files.
 - `make lint` / `make type-check` — `ruff check --fix` and `ty check`. **Both must pass with no `# noqa` and no suppressions**, since a suppression hides a real problem rather than fixing it. The one documented exception is `StateGraph(State)` in `corrections/correction_build.py`: `ty` rejects it, and rejects LangGraph's own `MessagesState` identically, so no spelling of that line can satisfy it.

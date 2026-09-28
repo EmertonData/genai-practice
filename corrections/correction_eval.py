@@ -1,7 +1,7 @@
 """Reference solutions for the Session 4 (Evaluate Faithfulness) notebook exercises
 (preparation.md §7).
 
-JUDGE_PROMPT, score_faithfulness, choose_claims_to_annotate and estimate_faithfulness.
+JUDGE_PROMPT, score_faithfulness, choose_claims_to_annotate, estimate_faithfulness and is_above_threshold.
 
 Every function here takes what it needs as a parameter, so they can be imported and tested on
 their own.
@@ -11,8 +11,11 @@ import json
 
 import numpy as np
 from glide.estimators import ClassicalMeanEstimator, PPIMeanEstimator
-from glide.mean_inference_results.classical import ClassicalMeanInferenceResult
-from glide.mean_inference_results.prediction_powered import PredictionPoweredMeanInferenceResult
+from glide.mean_inference_results import (
+    ClassicalMeanInferenceResult,
+    MeanInferenceResult,
+    PredictionPoweredMeanInferenceResult,
+)
 from glide.samplers import UniformSampler
 from langchain_anthropic import ChatAnthropic
 from langchain_core.messages import HumanMessage, SystemMessage
@@ -121,3 +124,25 @@ def estimate_faithfulness(
     result_true_only = ClassicalMeanEstimator().estimate(y_true, confidence_level=confidence_level)
     result_ppi = PPIMeanEstimator().estimate(y_true, y_proxy, confidence_level=confidence_level)
     return result_proxy_only, result_true_only, result_ppi
+
+
+def is_above_threshold(result: MeanInferenceResult, threshold: float, confidence_level: float) -> bool:
+    """Test whether the faithfulness rate is above a threshold, at a given confidence level.
+
+    Parameters
+    ----------
+    result : MeanInferenceResult
+        A GLIDE estimate of the faithfulness rate.
+    threshold : float
+        The rate the agent must exceed, e.g. 0.5.
+    confidence_level : float
+        The confidence required before concluding, e.g. 0.95.
+
+    Returns
+    -------
+    bool
+        True if the rate is above the threshold at this confidence level, False if that cannot be
+        guaranteed.
+    """
+    _, p_value, _ = result.confidence_interval.test_null_hypothesis(h0_value=threshold, alternative="larger")
+    return bool(p_value < 1 - confidence_level)
