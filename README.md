@@ -8,8 +8,8 @@
 
 This repository contains the two practical sessions of the GenAI in Practice course, held on September 30th, 2026 for you, the X-HEC DSAIB M2 students. Each session has its own notebook:
 
-- 🛠️ **Session 2, Build** (`notebooks/01_build_agentic_rag.ipynb`): you build a RAG agent that answers due-diligence questions on NVIDIA's annual reports and earnings calls.
-- 🔍 **Session 4, Evaluate Faithfulness** (`notebooks/02_evaluate_faithfulness.ipynb`): you measure how often an agent's answers are faithful to its sources, with an LLM-as-Judge and prediction-powered inference ([GLIDE](https://github.com/EmertonData/glide)).
+- 🛠️ **Session 2, Build** (`notebooks/session_2_build_agentic_rag.ipynb`): you build a RAG agent that answers due-diligence questions on NVIDIA's annual reports and earnings calls.
+- 🔍 **Session 4, Evaluate Faithfulness** (`notebooks/session_4_evaluate_faithfulness.ipynb`): you measure how often an agent's answers are faithful to its sources, with an LLM-as-Judge and prediction-powered inference ([GLIDE](https://github.com/EmertonData/glide)).
 
 ## ⚙️ Setup, before the course
 
@@ -56,12 +56,17 @@ Both sessions call Claude Haiku through one API key, shared by the whole room an
 You are going to do several exercises, all of them in the notebooks. The astute reader may notice that corrections are provided too. If you really want to learn something today, please do not consult them. This is your skill after all, take care of it. A few quotes to convince you that looking at corrections is the worst thing you can do during this day:
 
 > "What I cannot create, I do not understand."
-> Richard Feynman, Nobel Prize in Physics 1965
+>
+> *Richard Feynman, Nobel Prize in Physics 1965*
 
 > "During your studies, you have to work hard at reshaping your mind, your brain, and that is what makes the beauty of any field... The time spent searching, the time spent checking the solution, the time spent understanding: the path matters more than the result. Give our students the ability to decide, after they have accepted the effort (or the intellectual discomfort without which no thinking happens) and sharpened their critical mind."
-> Cédric Villani, Fields Medal 2010
+>
+> *Cédric Villani, Fields Medal 2010*
 
 > "Using AI to solve a problem is like asking a helicopter to drop you at the top of a mountain. No effort needed, great, you can take a photo at the summit. But the only thing you will have learned is how to get into a helicopter... We want to teach them to climb the mountain."
-> Hugo Duminil-Copin, Fields Medal 2022
+>
+> *Hugo Duminil-Copin, Fields Medal 2022*
 
-Our recommendation is to look at the corrections only once this course is finished, so that during this day you are entirely focused on thinking by yourself. 💪
+Our recommendation is to look at the corrections only once this course is finished, so that during this day you are entirely focused on thinking by yourself.
+
+Keep calm, and carry on. 💪
