@@ -104,8 +104,8 @@ Both Benjamin and Grégoire push commits to this repo, and the goal is to keep i
 
 Course materials for a one-day "GenAI in Practice" workshop (70 students) held at HEC, prepared by Emerton Data. Two hands-on practice sessions, each an instructor-authored Jupyter notebook with fill-in-the-blank exercises plus a separate "correction" script:
 
-- **Session 2 — Build** (`notebooks/01_build_agentic_rag.ipynb`): students build a RAG agent over a financial document (chunking → embedding → vector search → a ReAct agent loop). BM25 and hybrid fusion are likely dropped — the guiding rule is the simplest RAG that works (§5.5).
-- **Session 4 — Evaluate Faithfulness** (`notebooks/02_evaluate_faithfulness.ipynb`): students use LLM-as-judge scoring plus `glide-py` (prediction-powered inference / GLIDE) to produce a debiased faithfulness-rate estimate with a confidence interval, and compare it against the naive judge-mean baseline.
+- **Session 2 — Build** (`notebooks/session_2_build_agentic_rag.ipynb`): students build a RAG agent over a financial document (chunking → embedding → vector search → a ReAct agent loop). BM25 and hybrid fusion are likely dropped — the guiding rule is the simplest RAG that works (§5.5).
+- **Session 4 — Evaluate Faithfulness** (`notebooks/session_4_evaluate_faithfulness.ipynb`): students use LLM-as-judge scoring plus `glide-py` (prediction-powered inference / GLIDE) to produce a debiased faithfulness-rate estimate with a confidence interval, and compare it against the naive judge-mean baseline.
 
 Session 4 depends on Session 2 being fully finished (exercises + corrections) first — there is a deliberate ordering constraint: don't touch afternoon material until the morning build, corrections included, is done.
 
@@ -122,8 +122,8 @@ utils/                          # local package, installed by uv sync
   __init__.py
   build.py                      # helpers given to students: load_document, build_chunk_records, save_chunks
 notebooks/
-  01_build_agentic_rag.ipynb    # imports the helpers with `from utils.build import ...`
-  02_evaluate_faithfulness.ipynb
+  session_2_build_agentic_rag.ipynb    # imports the helpers with `from utils.build import ...`
+  session_4_evaluate_faithfulness.ipynb
 corrections/
   correction_build.py
   correction_eval.py
