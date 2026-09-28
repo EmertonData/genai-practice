@@ -28,7 +28,7 @@ The agent is a hand-built `StateGraph` rather than LangChain's prebuilt `create_
 
 The notebook warns that the full run costs real money, without giving a figure, and reuses the Session 2 key as-is.
 
-Still to do: part 2 of the notebook, GLIDE (§7.3-§7.5). It opens with Grégoire's point 9, moved out of part 1's intro: the answers were already cut into claims and every claim was annotated by a human, to save students time, but in real life human annotation is never exhaustive, which is where GLIDE's samplers come in.
+**Session 4's notebook, part 2 (GLIDE), is written on `feat/7.3-glide`, stacked on PR #15.** Details in preparation.md §7.3 to §7.5.
 
 **Measured on the judge, so don't re-derive** (all 800 claims, 2026-09-25, after Grégoire's review of PR #14): 399/400 faithful claims judged correctly and 361/400 unfaithful ones, so the judge is lenient. It says 54.8% of claims are faithful where the truth is 50.0%. It misses mostly Simplification (38% caught), then Acronym and Truncation (80%) and Exaggeration (85%); everything else is caught at 97-100%. The run cost $0.90 and took 2.7 minutes with 8 calls in parallel (about 600 input and 105 output tokens per claim), with no failed call. The prompt asks for reasoning first, under 100 words, and `max_tokens=200`: an earlier cap of 150 truncated 23 replies. Dropping the `reasoning` field does not save tokens: on 20 claims Haiku then reasoned in free text before the JSON, which broke 15 replies and raised output to 131 tokens a claim. The shared key's limits are 10,000 requests, 10M input and 2M output tokens per minute: one student uses about 330 requests a minute, so 70 students starting in the same minute would need 2.3× the request limit. Don't add descriptions ahead of the actual exercise content — describe an exercise when it's authored.
 
@@ -59,7 +59,7 @@ Environment is managed with [uv](https://docs.astral.sh/uv/); Python **>=3.12 is
 - `uv run python <script>` — run a script (e.g. `instructor/generate_paragraph_claims.py`) inside the project environment.
 - `uv add <package>` / `uv remove <package>` — change dependencies (updates `pyproject.toml` and `uv.lock` together; don't hand-edit the dependency list and forget to re-lock).
 - `uv lock` — re-resolve and refresh `uv.lock` after a manual `pyproject.toml` edit.
-- `uv sync --group dev` — **what the two of us run.** Adds the tooling in the `dev` dependency group (`prek`, `ruff`, `nbformat`) on top of the student environment.
+- `uv sync --group dev` — **what the two of us run.** Adds the tooling in the `dev` dependency group (`prek`, `ruff`, `ty`) on top of the student environment.
 - `uv run --group dev prek install` — **install the git pre-commit hooks, once per clone.** Without this the hooks never run and the problems they prevent come back.
 - `uv run --group dev prek run --all-files` — run every hook over the whole repo, rather than only on staged files.
 - `make lint` / `make type-check` — `ruff check --fix` and `ty check`. **Both must pass with no `# noqa` and no suppressions**, since a suppression hides a real problem rather than fixing it. The one documented exception is `StateGraph(State)` in `corrections/correction_build.py`: `ty` rejects it, and rejects LangGraph's own `MessagesState` identically, so no spelling of that line can satisfy it.
@@ -70,7 +70,7 @@ Environment is managed with [uv](https://docs.astral.sh/uv/); Python **>=3.12 is
 
 Notes:
 - **`utils/` is a real local Python package**, installed into the venv by `uv sync` via hatchling (`[build-system]` + `[tool.hatch.build.targets.wheel] packages = ["utils"]`). Notebooks therefore import it as `from utils.build import ...` from anywhere. Never go back to `sys.path.append("../src")`: Grégoire flagged that on PR #8 as the thing to avoid.
-- The PyPI package `glide-py` imports as `import glide` (not `import glide_py`); the sampler classes referenced in preparation.md §6.3 live at `glide.samplers` (`StratifiedSampler`, `UniformSampler`, etc.) — confirmed present when it was briefly installed to verify this, but it's not currently a dependency (see policy above) — add it back with `uv add glide-py` when actually implementing §6.3/§7.3.
+- The PyPI package `glide-py` imports as `import glide`, and is a dependency since part 2, with `matplotlib`. Its verified API is noted in preparation.md §7.5.
 - `uv.lock` is committed (unlike `.venv/`, which is gitignored) so both maintainers and every student get identical resolved versions of whatever's actually been added — this is what satisfies preparation.md §8.1's "pin dependencies" ticket.
 
 ## Who is doing what
@@ -162,7 +162,7 @@ README.md
 
 
 - **Students run the judge on all the claims themselves** (Grégoire's review of PR #14), through `judge_all`. `instructor/run_judge_scores.py` still produces reference scores in `judge_scores.json`, used for the §6.2 quality pass and as a fallback on the day.
-- **The labeled/proxy split for GLIDE is drawn live in the notebook**, not precomputed — students call a `glide.samplers` sampler (e.g. `StratifiedSampler` stratified on `error_type`, or `UniformSampler`) against `paragraph_claims.json` to pick which ids get their true label "revealed." This is intentional: students should see GLIDE's sampling API in action, not just its estimators.
+- **The labeled/proxy split for GLIDE is drawn live in the notebook** with `UniformSampler`, not precomputed, so students see GLIDE's sampling API in action.
 - Unfaithful claims must stay *subtly* wrong (in the spirit of the Contresens/Troncature/Simplification taxonomy categories), not absurdly wrong — an easy claim the judge always catches produces no bias for GLIDE to visibly correct, which kills the intended "aha" moment when comparing the naive judge-mean estimate to the GLIDE debiased estimate.
 - Retriever evaluation (precision@k / MAP@k) is explicitly out of scope for this iteration — do not reintroduce per-chunk relevance labeling.
 - Per-student API keys, a LiteLLM proxy, and automated per-key budget enforcement are explicitly deferred to a future edition — don't build them into this year's version.
