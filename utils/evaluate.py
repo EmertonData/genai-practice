@@ -116,6 +116,7 @@ def plot_estimates(results: list[MeanInferenceResult], labels: list[str]) -> Non
     for result, label, color in zip(results, labels, colors):
         low, high = result.confidence_interval.lower_bound, result.confidence_interval.upper_bound
         name = label.split("<br>")[0]
+        half_width = (high - low) / 2
         fig.add_trace(
             go.Scatter(
                 x=[result.mean],
@@ -135,14 +136,14 @@ def plot_estimates(results: list[MeanInferenceResult], labels: list[str]) -> Non
                 textposition="top center",
                 textfont={"color": color, "size": 16},
                 showlegend=False,
-                hovertemplate=f"{name}: %{{x:.1%}} [{low:.1%}, {high:.1%}]<extra></extra>",
+                hovertemplate=f"{name}: %{{x:.1%}} ± {half_width:.1%}<extra></extra>",
             )
         )
     fig.update_layout(
         hovermode="closest",
         font={"family": "Times New Roman", "color": "dimgray", "size": 15},
         plot_bgcolor="whitesmoke",
-        xaxis={"title": "Faithfulness rate", "tickformat": ".0%", "gridcolor": "white"},
+        xaxis={"title": "Faithfulness rate", "tickformat": ".0%", "gridcolor": "white", "range": [0, 1]},
         yaxis={"range": [len(labels) - 0.5, -0.8], "gridcolor": "white"},
         height=400,
         margin={"l": 20, "r": 20, "t": 30, "b": 50},
