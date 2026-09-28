@@ -36,11 +36,13 @@ Thumbs.db
 .vscode/
 .idea/
 
-# Chunks and vectors are generated during the workshop — not shipped
+# Chunks, vectors and verdicts are generated during the workshop — not shipped
 data/03_chunks/*
 !data/03_chunks/.gitkeep
 data/04_vectors/*
 !data/04_vectors/.gitkeep
+data/07_verdicts/*
+!data/07_verdicts/.gitkeep
 
 # Diagram sources; only the rendered PNG is shipped
 notebooks/assets/*.svg
