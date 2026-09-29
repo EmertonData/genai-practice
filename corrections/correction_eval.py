@@ -75,9 +75,6 @@ def score_faithfulness(chunk: str, claim: str, llm: ChatAnthropic, system_prompt
     """
     messages = [SystemMessage(system_prompt), HumanMessage(f"Chunk:\n{chunk}\n\nClaim:\n{claim}")]
     response = llm.invoke(messages)
-    # A reply cut off by max_tokens is incomplete JSON, so fail loudly rather than misparse it
-    if response.response_metadata.get("stop_reason") == "max_tokens":
-        raise ValueError(f"the judge's reply was truncated: {response.content!r}")
     return json.loads(response.text)
 
 

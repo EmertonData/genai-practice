@@ -47,5 +47,6 @@ data/07_verdicts/*
 # Diagram sources; only the rendered PNG is shipped
 notebooks/assets/*.svg
 
-# Maintainers' preparation notes, kept local until after the course
+# Maintainers' notes, kept local until after the course
 preparation.md
+CLAUDE.md
