@@ -23,7 +23,7 @@ from utils.build import State
 
 
 def chunk_string(text: str, chunk_size: int, overlap: int) -> list[str]:
-    """Split text into overlapping, non-blank chunks.
+    """Split text into overlapping chunks.
 
     Parameters
     ----------
@@ -37,11 +37,11 @@ def chunk_string(text: str, chunk_size: int, overlap: int) -> list[str]:
     Returns
     -------
     list[str]
-        The chunks, in order. Blank chunks are dropped.
+        The chunks, in order.
     """
     # separator="" means: do not look for a character to break on, just cut on length.
     splitter = CharacterTextSplitter(separator="", chunk_size=chunk_size, chunk_overlap=overlap)
-    return [chunk for chunk in splitter.split_text(text) if chunk.strip()]
+    return splitter.split_text(text)
 
 
 def embed_texts(texts: list[str], model: HuggingFaceEmbeddings) -> NDArray[np.float32]:
