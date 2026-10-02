@@ -1,4 +1,4 @@
-"""Precompute LLM-as-judge faithfulness scores (preparation.md §7.2).
+"""Precompute LLM-as-judge faithfulness scores (instructor/preparation.md §7.2).
 
 Instructor-only, run once against the shared API key over every claim in
 data/06_claims/paragraph_claims.json, with the judge prompt in

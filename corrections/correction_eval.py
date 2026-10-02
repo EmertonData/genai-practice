@@ -1,5 +1,5 @@
 """Reference solutions for the Session 4 (Evaluate Faithfulness) notebook exercises
-(preparation.md §7).
+(instructor/preparation.md §7).
 
 JUDGE_PROMPT, score_faithfulness, choose_claims_to_annotate, estimate_faithfulness and is_above_threshold.
 

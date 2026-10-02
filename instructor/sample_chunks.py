@@ -1,4 +1,4 @@
-"""Draw the chunks the faithfulness claims are written from (preparation.md §6.1).
+"""Draw the chunks the faithfulness claims are written from (instructor/preparation.md §6.1).
 
 Reads data/03_chunks/all_chunks.json, as produced by the Session 2 notebook with
 chunk_size=1000 and overlap=200, and writes data/06_claims/sampled_chunks.json.

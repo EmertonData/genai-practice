@@ -1,4 +1,4 @@
-"""Reference solutions for the Session 2 (Build) notebook exercises (preparation.md §5).
+"""Reference solutions for the Session 2 (Build) notebook exercises (instructor/preparation.md §5).
 
 chunk_string, vectorize_text, top_k_search and the ReAct loop assembly.
 
