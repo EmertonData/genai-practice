@@ -100,6 +100,8 @@ instructor/                     # maintainers' scripts and notes (not part of th
   sample_chunks.py              # draw the 400 chunks the claims are written from
   prompts/faithful_claim.md     # instructions given to the faithful-claim subagents
   prompts/unfaithful_claim.md   # same for unfaithful claims, with the English taxonomy table
+  prompts/write_claims.md       # the messages that launch the claim-writing subagents
+  prompts/verify_claims.md      # the messages that launch the verification subagents
   generate_paragraph_claims.py  # merge and check the subagents' claim batches
   measure_judge.py              # check the judge on 20 claims
   run_judge_scores.py           # score all 800 claims into judge_scores.json
@@ -132,7 +134,7 @@ data/                           # numbered pipeline stages
   1. `instructor/sample_chunks.py` draws 400 of the 922 chunks with a fixed seed and pins them in `data/06_claims/sampled_chunks.json`, since `03_chunks/` is gitignored.
   2. Claude Code subagents, not an API script, write the claims (8 agents of 50 chunks), so the shared key stays for students. Their instructions are in `instructor/prompts/`: a faithful claim must be *deducible* from the chunk alone, not necessarily a paraphrase. It may compare two stated figures but never compute a new one, and it is at most 20 words.
   3. `instructor/generate_paragraph_claims.py <batch_dir>` merges the agents' batch files, joins each claim to its chunk text and checks the result. The batches live outside the repo and were deleted afterwards.
-  4. A second set of subagents verified every claim against its chunk, and flagged claims were reviewed by hand: 3 wrong labels out of 400 faithful claims, 4 out of 400 unfaithful ones, all corrected.
+  4. A second set of subagents verified every claim against its chunk (`instructor/prompts/verify_claims.md`), and flagged claims were reviewed by hand: 3 wrong labels out of 400 faithful claims, 4 out of 400 unfaithful ones, all corrected.
 
   Each unfaithful claim applies one distortion from the taxonomy (`instructor/preparation.md` §6, translated to English in `unfaithful_claim.md`); `error_type` holds the English label and `distortion_note` says what was changed. `generate_paragraph_claims.py` also prints how often each class shows surface features a judge could use without reading the chunk (length, years, absolute wording, "says"). Watch that table: the first unfaithful prompt produced absolute wording in 45% of claims against 7% of faithful ones, which is why the prompt now discourages it.
 - Unfaithful claims must stay *subtly* wrong, not absurdly wrong — an easy claim the judge always catches produces no bias for GLIDE to visibly correct.

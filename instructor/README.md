@@ -70,12 +70,13 @@ The tracked data is ready to use, so this is only needed if the source documents
 1. `uv run python instructor/preprocess_documents.py` trims `data/01_raw/` into `data/02_processed/`. The page ranges kept are set at the top of the script.
 2. Run the Session 2 notebook with the reference solutions in place, which writes `data/03_chunks/all_chunks.json`.
 3. `uv run python instructor/sample_chunks.py` draws 400 of the 922 chunks with a fixed seed into `data/06_claims/sampled_chunks.json`. It stops if the chunk count is not 922, since that means the chunking changed.
-4. The claims are written by Claude Code subagents, not by a script, so that the course's API key stays for students. Each subagent takes a batch of 50 chunks and follows `instructor/prompts/faithful_claim.md` or `instructor/prompts/unfaithful_claim.md`. The second file holds the taxonomy of distortions.
-5. `uv run python instructor/generate_paragraph_claims.py <batch_dir>` merges the batch files into `data/06_claims/paragraph_claims.json`, checks them, and prints which surface features could give a claim away without reading its chunk. In the first edition, a second set of subagents then checked every claim against its chunk, and the claims they flagged were reviewed by hand.
-6. `uv run python -m instructor.measure_judge` checks the judge on 20 claims before a full run.
-7. `uv run python -m instructor.run_judge_scores` scores all 800 claims into `data/06_claims/judge_scores.json`. Students use these reference scores if their own run fails.
+4. The claims are written by Claude Code subagents run on Opus, not by a script, so that the course's API key stays for students. From a Claude Code session in this repository, launch 8 subagents for the faithful claims and 8 for the unfaithful ones, each on 50 chunks, with the messages in `instructor/prompts/write_claims.md`. Each subagent reads its range of `sampled_chunks.json`, follows `instructor/prompts/faithful_claim.md` or `instructor/prompts/unfaithful_claim.md` (which holds the taxonomy of distortions), and writes `faithful_NN.json` or `unfaithful_NN.json` into a batch folder outside the repository. Run a pilot on a few chunks first: in the first edition, a 20-chunk pilot showed too much absolute wording in the unfaithful claims, and the prompt was revised.
+5. `uv run python instructor/generate_paragraph_claims.py <batch_dir>` merges the 16 batch files into `data/06_claims/paragraph_claims.json`, checks them, and prints which surface features could give a claim away without reading its chunk.
+6. Launch 16 more subagents to verify every claim against its chunk, with the messages in `instructor/prompts/verify_claims.md`. They only report the claims they flag. Review those by hand, fix them in the batch files, and run step 5 again. In the first edition, this found 3 wrong labels out of 400 faithful claims and 4 out of 400 unfaithful ones.
+7. `uv run python -m instructor.measure_judge` checks the judge on 20 claims before a full run.
+8. `uv run python -m instructor.run_judge_scores` scores all 800 claims into `data/06_claims/judge_scores.json`. Students use these reference scores if their own run fails.
 
-Steps 6 and 7 call the API, and are run as modules from the repository root so that they can import the judge prompt from `corrections/`.
+Steps 7 and 8 call the API, and are run as modules from the repository root so that they can import the judge prompt from `corrections/`.
 
 ## 🔑 Preparing an edition
 
@@ -100,6 +101,7 @@ These were measured in the first edition, with Claude Haiku 4.5:
 
 - **Anticipating Environment Setup Issues.** Students might have anaconda installed on their computer which prevents the uv env to be seen by VSCode apparently.
 - **Review the unfaithful claims.** The quality pass (`preparation.md` §6.2) was not done in detail, for lack of time. The judge's reference scores show which claims are too easy to catch.
-- **Improve retrieval.** Dense retrieval with `all-MiniLM-L6-v2` is weak on table lookups: on 7 questions with a numerical answer it finds the right chunk in 2 at k=5, against 5 for BM25. BM25 was dropped to keep the session short.
+- **Improve retrieval.** Dense retrieval with `all-MiniLM-L6-v2` is weak on table lookups: on 7 questions with a numerical answer it finds the right chunk in 2 at k=5, against 5 for BM25. BM25 was dropped to keep the session short. Asymmetric embedding models such as E5, which embed a question and a passage differently through a `query:` or `passage:` prefix, are another option.
+- **Add an exercise on memory.** The agent forgets everything between two questions, as the last point of the Session 2 notebook's conclusion shows. Storing the conversation and reloading it before each question would make a good extra exercise.
 - **Give each student a key**, or route calls through a proxy such as LiteLLM, with a budget per key, so that one runaway loop can't use up the whole room's budget.
 - **Revisit the exercise format if students use AI assistants heavily.** "Complete this function" exercises assume they don't; "explain or debug this code" exercises would hold up better.
