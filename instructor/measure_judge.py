@@ -1,4 +1,4 @@
-"""Measure the LLM judge on a small sample of claims before it goes into the notebook (preparation.md §7.1).
+"""Measure the LLM judge on a small sample of claims before it goes into the notebook (instructor/preparation.md §7.1).
 
 Instructor-only, a one-off run of about 20 calls against the shared API key. It judges 10
 unfaithful claims, one per error type, and 10 faithful claims, then prints the judge's accuracy

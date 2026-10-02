@@ -1,4 +1,4 @@
-"""Assemble the paragraph-level faithfulness claim dataset (preparation.md §6.1).
+"""Assemble the paragraph-level faithfulness claim dataset (instructor/preparation.md §6.1).
 
 Instructor-only. The claims themselves are written by Claude Code subagents, one batch
 of 50 sampled chunks each: one faithful claim per chunk following

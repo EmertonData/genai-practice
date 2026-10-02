@@ -1,4 +1,4 @@
-"""Trim the raw filings down to their substantive pages (preparation.md §4.2-4.3).
+"""Trim the raw filings down to their substantive pages (instructor/preparation.md §4.2-4.3).
 
 Reads data/01_raw/, writes data/02_processed/. Dropped pages are the cover and
 table of contents at the front, and the exhibit index, signatures, insider-trading
